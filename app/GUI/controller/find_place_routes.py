@@ -10,7 +10,7 @@ find_places_bp = Blueprint('find_places', __name__)
 
 # def run_coroutine(coroutine):
 #     try:
-#         # Kiểm tra xem có event loop nào đang chạy không
+#         # Kiểm tra xem có event loop nào đang chạy không :v
 #         loop = asyncio.get_running_loop()
 #     except RuntimeError:
 #         # Không có loop nào đang chạy, tạo một loop mới
