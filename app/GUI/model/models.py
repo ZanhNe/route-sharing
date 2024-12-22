@@ -39,15 +39,6 @@ user_route = Table('user_route', db.metadata,
 bus_ticket = Table('bus_ticket', db.metadata,
                     Column('bus_id', ForeignKey('bus.bus_id'), primary_key=True),
                     Column('ticket_id', ForeignKey('busticket.ticket_id'), primary_key=True))
-# user_user = Table('user_user', db.metadata,
-#                     Column('firstuser', ForeignKey('user.user_id'), primary_key=True),
-#                     Column('seconduser', ForeignKey('user.user_id'), primary_key=True))
-
-
-
-# class TypePost(enum.Enum):
-#     NORMAL_POST = 'normal_post'
-#     ROUTE_POST = 'route_post'
 
 class Status(enum.Enum):
     FREE = 'free'
@@ -74,23 +65,6 @@ class UserTicket(db.Model):
     ticket: Mapped['BusTicket'] = relationship(back_populates='users', lazy=True)
 
 
-# class RequestRoute(db.Model):
-#     __tablename__ = 'request'
-#     request_id: Mapped[int] = mapped_column('request_id', primary_key=True, autoincrement=True)
-
-#     distance_to_start: Mapped[float] = mapped_column('distance_start', nullable=True)
-#     time_comparison: Mapped[DateTime] = mapped_column('time', DateTime, nullable=True)
-#     status: Mapped[str] = mapped_column('status', Enum(Status), default=Status.PENDING)
-#     created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now())
-
-#     sender_location_id: Mapped[int] = mapped_column('senderlocation_id', ForeignKey('location.location_id'))
-#     sender_location: Mapped['Location'] = relationship(lazy=True)
-
-#     sender_id: Mapped[int] = mapped_column('sender_id', ForeignKey('user.user_id'))
-#     receiver_id: Mapped[int] = mapped_column('receiver_id', ForeignKey('user.user_id'))
-
-#     sender: Mapped['User'] = relationship(back_populates='sent_requests_route', foreign_keys=[sender_id], lazy=True)
-#     receiver: Mapped['User'] = relationship(back_populates='received_requests_route', foreign_keys=[receiver_id], lazy=True)
 
 class BaseConversation(db.Model):
     __abstract__ = True
@@ -209,38 +183,6 @@ class Notification(db.Model):
 
 
 
-# class Notification(db.Model):
-#     __tablename__ = 'noti'
-#     noti_id: Mapped[int] = mapped_column('noti_id', primary_key=True, autoincrement=True)
-#     noti_type: Mapped[str] = mapped_column('noti_type', Enum(NotificationType), nullable=False)
-
-#     content: Mapped[str] = mapped_column('content', String(1000), nullable=False)
-#     created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now(), nullable=False)
-#     is_read: Mapped[bool] = mapped_column('is_read', default=False, nullable=False)
-
-#     sender_id: Mapped[int] = mapped_column('sender_id', ForeignKey('user.user_id'))
-#     receiver_id: Mapped[int] = mapped_column('receiver_id', ForeignKey('user.user_id'))
-
-#     sender: Mapped['User'] = relationship(back_populates='sent_requests_noti', foreign_keys=[sender_id], lazy=True)
-#     receiver: Mapped['User'] = relationship(back_populates='received_requests_noti', foreign_keys=[receiver_id], lazy=True)
-
-# class UserShare(db.Model):
-#     __tablename__ = 'user_share'
-#     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
-
-#     is_match: Mapped[bool] = mapped_column('is_active', default=False)
-
-#     description: Mapped[str] = mapped_column('description', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-
-#     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'))
-#     route_share_id: Mapped[int] = mapped_column('share_id', ForeignKey('route_share.share_id'))
-
-#     user: Mapped['User'] = relationship(back_populates='route_shares', lazy=True)
-#     route_share: Mapped['UserRouteShare'] = relationship(back_populates='users', lazy=True)
-
-
-
-
 class Roles(db.Model):
     __tablename__ = 'roles'
     role_id : Mapped[int] = mapped_column('role_id', primary_key=True, autoincrement=True)
@@ -331,17 +273,9 @@ class User(db.Model):
     tickets: Mapped[List['UserTicket']] = relationship(back_populates='user', lazy=True)
     payments: Mapped[List['Payment']] = relationship(back_populates='user', lazy=True)
 
-    # messages: Mapped['Message'] = relationship(back_populates='sender', lazy=True)
-    # conversations: Mapped['ConversationMember'] = relationship(back_populates='member', lazy=True)
-
     host_groups: Mapped[List['ConversationGroup']] = relationship(back_populates='created_by', lazy=True)
 
     groups: Mapped[List['GroupMember']] = relationship(back_populates='member', lazy=True)
-    # sent_requests_route: Mapped[List['RequestRoute']] = relationship(foreign_keys=[RequestRoute.sender_id], back_populates='sender', lazy=True)
-    # received_requests_route: Mapped[List['RequestRoute']] = relationship(foreign_keys=[RequestRoute.receiver_id], back_populates='receiver', lazy=True)
-
-    # sent_requests_noti: Mapped[List['Notification']] = relationship(foreign_keys=[Notification.sender_id], back_populates='sender', lazy=True)
-    # received_requests_noti: Mapped[List['Notification']] = relationship(foreign_keys=[Notification.receiver_id], back_populates='receiver', lazy=True)
 
     conversation_associations: Mapped[List['Conversation']] = relationship(foreign_keys=[Conversation.main_user_id], back_populates='main_user', lazy=True)
     # secondary_conversation: Mapped[]
@@ -378,33 +312,6 @@ class Payment(db.Model):
     user: Mapped['User'] = relationship(back_populates='payments', lazy=True)
 
 
-# class Post(db.Model):
-#     __tablename__ = 'post'
-#     post_id: Mapped[int] = mapped_column('postid', primary_key=True, autoincrement=True)
-#     title: Mapped[str] = mapped_column('title', String(100), nullable=False)
-#     content: Mapped[str] = mapped_column('content', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-#     image_url: Mapped[str] = mapped_column('imageurl', String(500), nullable=True)
-#     type: Mapped[str] = mapped_column('type', Enum(TypePost), default=TypePost.NORMAL_POST)
-#     created_date: Mapped[DateTime] = mapped_column('created_date', DateTime)
-#     updated_date: Mapped[DateTime] = mapped_column('updateddate', DateTime, nullable=True)
-#     status_match: Mapped[bool] = mapped_column('statusmatch', default=False, nullable=True)
-
-#     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'), nullable=True)
-#     user: Mapped['User'] = relationship(back_populates='posts', lazy=True)
-#     comments: Mapped[List['Comment']] = relationship(back_populates='post', lazy=True)
-
-# class Comment(db.Model):
-#     __tablename__ = 'comment'
-#     comment_id: Mapped[int] = mapped_column('commentid', primary_key=True, autoincrement=True)
-#     content: Mapped[str] = mapped_column('content', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-#     created_date: Mapped[DateTime] = mapped_column('created_date', DateTime)
-#     updated_date: Mapped[DateTime] = mapped_column('updateddate', DateTime)
-
-#     # post_id: Mapped[int] = mapped_column('postid', ForeignKey('post.postid'), nullable=True)
-#     # post: Mapped['Post'] = relationship(back_populates='comments', lazy=True)
-
-#     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'), nullable=True)
-#     user: Mapped['User'] = relationship(back_populates='comments', lazy=True)
 
 
 
