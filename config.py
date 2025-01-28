@@ -14,6 +14,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY') or 'hard to guess key'
     REDIS_URL = os.getenv('REDIS_URL')
     SQLALCHEMY_DATABASE_URI = DB_URL
+    # GEVENT_SUPPORT = True
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', 'False') == 'True'
     DEBUG = os.getenv('DEBUG', 'False') == 'True'
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')

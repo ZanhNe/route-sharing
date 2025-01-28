@@ -32,9 +32,9 @@ def login():
 
 
 
-@auth_bp.route('/api/v1/auth/register', methods=['POST']) 
-def signup():
-    return {'success': 'Test', 'status': 200}, 200
+# @auth_bp.route('/api/v1/auth/register', methods=['POST']) 
+# def signup():
+#     return {'success': 'Test', 'status': 200}, 200
 
 #Token Freshness pattern
 @auth_bp.route('/api/v1/auth/refresh', methods=['GET'])

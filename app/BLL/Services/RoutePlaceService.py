@@ -19,11 +19,15 @@ class RoutePlaceService(IRoutePlaceService):
         return route
     
     def handle_new_route(self, route_name: str, list_places: List[Place]) -> Route:
-        new_route = Route(route_name=route_name) #TH2 : Chưa có route trong DB --> Tạo route mới 
-        route_after_add = self.route_repository.add_route(route=new_route)
-        if (not route_after_add):
+        try:
+            new_route = Route(route_name=route_name) #TH2 : Chưa có route trong DB --> Tạo route mới 
+            route_after_add = self.route_repository.add_route(route=new_route)
+            if (not route_after_add):
+                return None
+            return self.add_place_to_route(route=route_after_add, list_places=list_places)
+        except Exception as e:
+            print(e)
             return None
-        return self.add_place_to_route(route=route_after_add, list_places=list_places)
     
     def get_route_with_place(self, route_name: str, list_place_id: List[str]) -> Route:
         routes = self.route_repository.get_routes_all()

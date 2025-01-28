@@ -9,11 +9,17 @@ from app.DAL.Interfaces.IUserRoleRepository import IUserRoleRepository
 from app.DAL.Interfaces.IRoutePlaceRepository import IRoutePlaceRepository
 from app.DAL.Interfaces.IUserRouteRepository import IUserRouteRepository
 from app.DAL.Interfaces.IPlaceRepository import IPlaceRepository
-from app.DAL.Interfaces.IRouteShareRepository import IRouteShareRepository
-from app.DAL.Interfaces.IRequestRouteRepository import IRequestRouteRepository
+# from app.DAL.Interfaces.IRouteShareRepository import IRouteShareRepository
+# from app.DAL.Interfaces.IRequestRouteRepository import IRequestRouteRepository
 from app.DAL.Interfaces.INotificationRepository import INotificationRepository
-from app.DAL.Interfaces.IMatchRouteRepository import IMatchRouteRepository
+# from app.DAL.Interfaces.IMatchRouteRepository import IMatchRouteRepository
 from app.DAL.Interfaces.IConversationRepository import IConversationRepository
+from app.DAL.Interfaces.IScheduleManagementRepository import IScheduleManagementRepository
+from app.DAL.Interfaces.IScheduleShareRepository import IScheduleShareRepository
+# from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
+from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
+from app.DAL.Interfaces.IRoadmapRequestRepository import IRoadmapRequestRepository
+
 
 
 from app.DAL.Repositories.RoleRepository import RoleRepository
@@ -25,11 +31,15 @@ from app.DAL.Repositories.UserRoleRepository import UserRoleRepository
 from app.DAL.Repositories.RoutePlaceRepository import RoutePlaceRepository
 from app.DAL.Repositories.UserRouteRepository import UserRouteRepository
 from app.DAL.Repositories.PlaceRepository import PlaceRepository
-from app.DAL.Repositories.RouteShareRepository import RouteShareRepository
-from app.DAL.Repositories.RequestRouteRepository import RequestRouteRepository
+# from app.DAL.Repositories.RouteShareRepository import RouteShareRepository
+# from app.DAL.Repositories.RequestRouteRepository import RequestRouteRepository
 from app.DAL.Repositories.NotificationRepository import NotificationRepository
-from app.DAL.Repositories.MatchRouteRepository import MatchRouteRepository
+# from app.DAL.Repositories.MatchRouteRepository import MatchRouteRepository
 from app.DAL.Repositories.ConversationRepository import ConversationRepository
+from app.DAL.Repositories.ScheduleManagementRepository import ScheduleManagementRepository
+from app.DAL.Repositories.ScheduleShareRepository import ScheduleShareRepository
+from app.DAL.Repositories.RoadmapShareRepository import RoadmapShareRepository
+from app.DAL.Repositories.RoadmapRequestRepository import RoadmapRequestRepository
 
 
 from app.BLL.Interfaces.IRoleService import IRoleService
@@ -41,11 +51,14 @@ from app.BLL.Interfaces.IUserRoleService import IUserRoleService
 from app.BLL.Interfaces.IRoutePlaceService import IRoutePlaceService
 from app.BLL.Interfaces.IUserRouteService import IUserRouteService
 from app.BLL.Interfaces.IPlaceService import IPlaceService
-from app.BLL.Interfaces.IRouteShareService import IRouteShareService
-from app.BLL.Interfaces.IRequestRouteService import IRequestRouteService
+# from app.BLL.Interfaces.IRouteShareService import IRouteShareService
+# from app.BLL.Interfaces.IRequestRouteService import IRequestRouteService
 from app.BLL.Interfaces.INotificationService import INotificationService
-from app.BLL.Interfaces.IMatchRouteService import IMatchRouteService
+# from app.BLL.Interfaces.IMatchRouteService import IMatchRouteService
 from app.BLL.Interfaces.IConversationService import IConversationService
+from app.BLL.Interfaces.IScheduleManagementService import IScheduleManagementService
+from app.BLL.Interfaces.IRoadmapShareService import IRoadmapShareService
+from app.BLL.Interfaces.IRoadmapRequestService import IRoadmapRequestService
 
 
 from app.BLL.Services.RoleService import RoleService
@@ -57,15 +70,20 @@ from app.BLL.Services.UserRoleService import UserRoleService
 from app.BLL.Services.RoutePlaceService import RoutePlaceService
 from app.BLL.Services.UserRouteService import UserRouteService
 from app.BLL.Services.PlaceService import PlaceService
-from app.BLL.Services.RouteShareService import RouteShareService
-from app.BLL.Services.RequestRouteService import RequestRouteService
+# from app.BLL.Services.RouteShareService import RouteShareService
+# from app.BLL.Services.RequestRouteService import RequestRouteService
 from app.BLL.Services.NotificationService import NotificationService
-from app.BLL.Services.MatchRouteService import MatchRouteService
+# from app.BLL.Services.MatchRouteService import MatchRouteService
 from app.BLL.Services.ConversationService import ConversationService
+from app.BLL.Services.ScheduleManagementService import ScheduleManagementService
+from app.BLL.Services.RoadmapShareService import RoadmapShareService
+from app.BLL.Services.RoadmapRequestService import RoadmapRequestService
 
 
 
-from app.lib.lib_ma import UserSchema, RoleSchema, LocationSchema, RouteSchema, PlaceSchema, UserRouteShareSchema, RequestRouteSchema, NotificationSchema, MatchRouteSchema, ConversationSchema, MessageSchema
+from app.lib.lib_ma import UserSchema, RoleSchema, LocationSchema, RouteSchema, PlaceSchema, NotificationSchema, \
+                            ConversationSchema, MessageSchema, ScheduleManagementSchema, RoadmapShareSchema, ScheduleShareItemSchema, \
+                            CreateRoadmapRequestValidator, RoadmapRequestSchema
 
 
 
@@ -83,11 +101,15 @@ repository_factory.register_container(IUserRoleRepository, UserRoleRepository)
 repository_factory.register_container(IRoutePlaceRepository, RoutePlaceRepository)
 repository_factory.register_container(IUserRouteRepository, UserRouteRepository)
 repository_factory.register_container(IPlaceRepository, PlaceRepository)
-repository_factory.register_container(IRouteShareRepository, RouteShareRepository)
-repository_factory.register_container(IRequestRouteRepository, RequestRouteRepository)
+# repository_factory.register_container(IRouteShareRepository, RouteShareRepository)
+# repository_factory.register_container(IRequestRouteRepository, RequestRouteRepository)
 repository_factory.register_container(INotificationRepository, NotificationRepository)
-repository_factory.register_container(IMatchRouteRepository, MatchRouteRepository)
+# repository_factory.register_container(IMatchRouteRepository, MatchRouteRepository)
 repository_factory.register_container(IConversationRepository, ConversationRepository)
+repository_factory.register_container(IScheduleManagementRepository, ScheduleManagementRepository)
+repository_factory.register_container(IScheduleShareRepository, ScheduleShareRepository)
+repository_factory.register_container(IRoadmapShareRepository, RoadmapShareRepository)
+repository_factory.register_container(IRoadmapRequestRepository, RoadmapRequestRepository)
 
 
 
@@ -100,11 +122,14 @@ service_factory.register_container(IUserRoleService, UserRoleService)
 service_factory.register_container(IRoutePlaceService, RoutePlaceService)
 service_factory.register_container(IUserRouteService, UserRouteService)
 service_factory.register_container(IPlaceService, PlaceService)
-service_factory.register_container(IRouteShareService, RouteShareService)
-service_factory.register_container(IRequestRouteService, RequestRouteService)
+# service_factory.register_container(IRouteShareService, RouteShareService)
+# service_factory.register_container(IRequestRouteService, RequestRouteService)
 service_factory.register_container(INotificationService, NotificationService)
-service_factory.register_container(IMatchRouteService, MatchRouteService)
+# service_factory.register_container(IMatchRouteService, MatchRouteService)
 service_factory.register_container(IConversationService, ConversationService)
+service_factory.register_container(IScheduleManagementService, ScheduleManagementService)
+service_factory.register_container(IRoadmapShareService, RoadmapShareService)
+service_factory.register_container(IRoadmapRequestService, RoadmapRequestService)
 
 
 
@@ -120,15 +145,20 @@ user_role_repository = repository_factory.resolve(IUserRoleRepository)(session=d
 route_place_repository = repository_factory.resolve(IRoutePlaceRepository)(session=db.session)
 user_route_repository = repository_factory.resolve(IUserRouteRepository)(session=db.session)
 place_repository = repository_factory.resolve(IPlaceRepository)(session=db.session)
-route_share_repository = repository_factory.resolve(IRouteShareRepository)(session=db.session)
-request_route_repository = repository_factory.resolve(IRequestRouteRepository)(session=db.session)
+# route_share_repository = repository_factory.resolve(IRouteShareRepository)(session=db.session)
+# request_route_repository = repository_factory.resolve(IRequestRouteRepository)(session=db.session)
 notification_repository = repository_factory.resolve(INotificationRepository)(session=db.session)
-match_route_repository = repository_factory.resolve(IMatchRouteRepository)(session=db.session)
+# match_route_repository = repository_factory.resolve(IMatchRouteRepository)(session=db.session)
 conversation_repository = repository_factory.resolve(IConversationRepository)(session=db.session)
+schedule_management_repository = repository_factory.resolve(IScheduleManagementRepository)(session=db.session)
+schedule_share_repository = repository_factory.resolve(IScheduleShareRepository)(session=db.session)
+roadmap_share_repository = repository_factory.resolve(IRoadmapShareRepository)(session=db.session)
+roadmap_request_repository = repository_factory.resolve(IRoadmapRequestRepository)(session=db.session)
+
 
 
 role_service = service_factory.resolve(IRoleService)(role_repository)
-user_service = service_factory.resolve(IUserService)(user_repository)
+user_service = service_factory.resolve(IUserService)(user_repository, role_repository)
 location_service = service_factory.resolve(ILocationService)(location_repository)
 route_service = service_factory.resolve(IRouteService)(route_repository)
 user_location_service = service_factory.resolve(IUserLocationService)(user_location_repository)
@@ -136,26 +166,35 @@ user_role_service = service_factory.resolve(IUserRoleService)(user_role_reposito
 route_place_service = service_factory.resolve(IRoutePlaceService)(route_place_repository=route_place_repository, place_repository=place_repository, route_repository=route_repository)
 user_route_service = service_factory.resolve(IUserRouteService)(user_route_repository=user_route_repository, user_repository=user_repository, route_repository=route_repository)
 place_service = service_factory.resolve(IPlaceService)(place_repository)
-route_share_service = service_factory.resolve(IRouteShareService)(route_share_repository)
-request_route_service = service_factory.resolve(IRequestRouteService)(request_route_repository)
+# route_share_service = service_factory.resolve(IRouteShareService)(route_share_repository)
+# request_route_service = service_factory.resolve(IRequestRouteService)(request_route_repository)
 notification_service = service_factory.resolve(INotificationService)(notification_repository)
-match_route_service = service_factory.resolve(IMatchRouteService)(match_route_repository)
+# match_route_service = service_factory.resolve(IMatchRouteService)(match_route_repository)
 conversation_service = service_factory.resolve(IConversationService)(conversation_repository)
-
+schedule_management_service = service_factory.resolve(IScheduleManagementService)(schedule_management_repository, schedule_share_repository)
+roadmap_share_service = service_factory.resolve(IRoadmapShareService)(roadmap_share_repository)
+roadmap_request_service = service_factory.resolve(IRoadmapRequestService)(roadmap_request_repository)
 
 
 #init schema
 role_schema = RoleSchema()
-user_schema = UserSchema(only=('user_id', 'user_name', 'roles', 'status', 'avatar'))
+user_schema = UserSchema(only=('user_id', 'user_name', 'user_account', 'roles', 'status', 'avatar', 'created_time', 'updated_time'))
 location_schema = LocationSchema()
+schedule_share_item_schema = ScheduleShareItemSchema()
 route_schema = RouteSchema()
 place_schema = PlaceSchema()
-route_share_schema = UserRouteShareSchema()
-request_route_schema = RequestRouteSchema()
+# route_share_schema = UserRouteShareSchema()
+# request_route_schema = RequestRouteSchema()
 notification_schema = NotificationSchema()
-match_route_schema = MatchRouteSchema()
+# match_route_schema = MatchRouteSchema()
 conversation_schema = ConversationSchema()
 message_schema = MessageSchema()
+schedule_management_schema = ScheduleManagementSchema()
+roadmap_share_schema = RoadmapShareSchema()
+create_roadmap_request_validator = CreateRoadmapRequestValidator()
+roadmap_request_schema = RoadmapRequestSchema()
+
+
 
 
 

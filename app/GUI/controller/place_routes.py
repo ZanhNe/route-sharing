@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 import requests
 from app.Container.InstanceContainer import place_service, place_schema
 from app.GUI.model.models import Place, Location
-from app.API.Goong.GoongAPI import get_place_detail, get_mutiples_place_detail
+from app.API.Goong.GoongAPI import get_place_detail, get_mutiples_place_detail, get_direction_goong
 from app.API.ORS.ORSAPI import get_direction_ORS
 import asyncio
 import pprint
@@ -111,15 +111,21 @@ def find_direction():
             j+=1
     
 
+    # for place in list_places:
+    #     coord = [place.location.longitude, place.location.latitude]
+    #     coordinates.append(coord)
+
     for place in list_places:
-        coord = [place.location.longitude, place.location.latitude]
+        coord = [place.location.latitude, place.location.longitude]
         coordinates.append(coord)
 
     
-    coordinates_dict = simplejson.dumps(obj={'coordinates': coordinates}, default=float)
+    # coordinates_dict = simplejson.dumps(obj={'coordinates': coordinates}, default=float)
 
     # pprint.pprint(coordinates_dict)
-    data = asyncio.run(get_direction_ORS(data=coordinates_dict))
+    # data = asyncio.run(get_direction_ORS(data=coordinates_dict))
+
+    data = asyncio.run(get_direction_goong(coordinates=coordinates))
 
     if ('error' in data):
         return jsonify(data), 400

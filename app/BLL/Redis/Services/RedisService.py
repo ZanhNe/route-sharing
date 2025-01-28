@@ -29,9 +29,10 @@ class RedisService(IRedisService):
                 time.sleep(0.1)
             else:
                 try:
-                    data = simplejson.loads(message['data'])
+                    data: dict = simplejson.loads(message['data'])
+                    # print(data)
                     if ('send_to' in data):
-                        self.socket_handler.handlers[message['channel']](data['payload'], self.redis_client.get(f'user_sid:{data['send_to']}'))
+                        self.socket_handler.handlers[message['channel']](data['payload'], self.redis_client.get(f'user_sid:{data['send_to']}'), data.get('include_self', True))
                     else:
                         self.socket_handler.handlers[message['channel']](data['payload'])
                 except Exception as e:

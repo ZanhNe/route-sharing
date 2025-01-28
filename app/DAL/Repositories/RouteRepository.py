@@ -11,6 +11,9 @@ class RouteRepository(IRouteRepository):
     def get_routes_all(self) -> List[Route]:
         return self.session.query(Route).all()
     
+    def get_routes_by_list_places_id(self, list_places_id):
+        pass
+
     def get_route(self, route_id: int) -> Route:
         return self.session.query(Route).get(route_id)
     

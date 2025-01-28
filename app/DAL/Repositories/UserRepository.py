@@ -12,7 +12,7 @@ class UserRepository(IUserRepository):
     def get_user_all(self) -> List[User]:
         return self.session.query(User).all()
 
-    def get_user_by_id(self, user_id: int) -> User:
+    def get_user_by_id(self, user_id: str) -> User:
         return self.session.query(User).get(user_id)
     
     def get_user_by_account(self, user_account: str) -> User:
@@ -38,8 +38,18 @@ class UserRepository(IUserRepository):
             self.session.rollback()
             return user
         
+    def update_user(self, user: User) -> User:
+        try:
+            self.session.add(instance=user)
+            self.session.commit()
+            return user
+        except SQLAlchemyError as e:
+            print(e)
+            self.session.rollback()
+            return None
+        
     
-    def update_status_user_request(self, main_user_id_accept: int, secondary_user_id_accept: int, list_declined_user_id: List[int]):
+    def update_status_user_request(self, main_user_id_accept: str, secondary_user_id_accept: str, list_declined_user_id: List[str]):
         try:
             sql = text("""
                     update user

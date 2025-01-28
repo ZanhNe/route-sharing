@@ -8,6 +8,10 @@ class IRouteRepository(ABC):
         pass
 
     @abstractmethod
+    def get_routes_by_list_places_id(self, list_places_id) -> List[Route]:
+        pass
+
+    @abstractmethod
     def get_route(self, route_id: int) -> Route:
         pass
 

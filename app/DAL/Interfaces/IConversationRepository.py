@@ -9,9 +9,15 @@ class IConversationRepository(ABC):
         pass
 
     @abstractmethod
-    def get_conversation_by_two_user_id(self, first_user_id: int, second_user_id: int) -> Conversation:
+    def get_conversation_by_two_user_id(self, first_user_id: str, second_user_id: str) -> Conversation:
         pass
 
+    @abstractmethod
+    def get_conversations_by_user_id(self, user_id: str) -> List[Conversation]:
+        pass
+    @abstractmethod
+    def get_message_from_conversation(self, cursor: int, conversation_id: int, limit: int = 10) -> List[Message]:
+        pass
     @abstractmethod
     def create_conversation(self, conversation: Conversation) -> Conversation:
         pass

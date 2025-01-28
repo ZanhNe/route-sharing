@@ -10,7 +10,7 @@ class IUserService(ABC):
         pass
 
     @abstractmethod
-    def get_user_by_id(self, user_id: int) -> User:
+    def get_user_by_id(self, user_id: str) -> User:
         pass
 
     @abstractmethod
@@ -22,9 +22,13 @@ class IUserService(ABC):
         pass
 
     @abstractmethod
+    def update_user(self, user: User) -> User:
+        pass
+
+    @abstractmethod
     def update_status_user(self, new_status: str, user: User) -> User:
         pass
 
     @abstractmethod
-    def update_status_user_request(self, main_user_id_accept: int, secondary_user_id_accept: int, list_declined_user_id: List[int]):    
+    def update_status_user_request(self, main_user_id_accept: str, secondary_user_id_accept: str, list_declined_user_id: List[str]):    
         pass

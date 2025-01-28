@@ -1,7 +1,4 @@
 from flask_bcrypt import Bcrypt
-# from flask_sqlalchemy import SQLAlchemy
-# from sqlalchemy.orm import DeclarativeBase
-# from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
 from opencage.geocoder import OpenCageGeocode
 import openrouteservice as ors
@@ -13,13 +10,23 @@ from dotenv import load_dotenv
 from app.Socket.controllers.socket import socketio
 from app.GUI.model.models import db
 from app.lib.lib_ma import ma
-# class Base(DeclarativeBase):
-#     pass
+import firebase_admin
+from firebase_admin import credentials
+
+
+#import cloudinary lib
+import cloudinary
+
 
 load_dotenv()
 
-# db = SQLAlchemy(model_class=Base)
-# ma = Marshmallow()
+cloudinary.config(
+    cloud_name = os.getenv('CLOUD_NAME'),
+    api_key = os.getenv('CLOUD_API_KEY'),
+    api_secret = os.getenv('CLOUD_API_SECRET'),
+    secure = True
+)
+
 bcrypt = Bcrypt()
 jwt = JWTManager()
 cors = CORS()
@@ -29,6 +36,9 @@ key_geocoder = os.getenv('GEOCODER_API_KEY')
 key_ors = os.getenv('ORS_API_KEY')
 key_here_maps = os.getenv('HERE_MAPS_API_KEY')
 key_goong = os.getenv('GOONG_API_KEY')
+
+cred = credentials.Certificate("firebase_admin.json")
+firebase_admin.initialize_app(cred)
 
 
 geocoder = OpenCageGeocode(key=key_geocoder)

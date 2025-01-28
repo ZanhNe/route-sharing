@@ -1,9 +1,9 @@
-from app.GUI.model.models import Conversation, Message
+from app.GUI.model.models import Conversation, Message, Participant
 from typing import List
 from app.BLL.Interfaces.IConversationService import IConversationService
 from app.DAL.Interfaces.IConversationRepository import IConversationRepository
 from app.utils.utils import Helper
-
+from datetime import datetime
 class ConversationService(IConversationService):
     def __init__(self, conversation_repo: IConversationRepository):
         self.conversation_repo = conversation_repo
@@ -11,7 +11,7 @@ class ConversationService(IConversationService):
     def get_conversation_by_id(self, conversation_id: int) -> Conversation:
         return self.conversation_repo.get_conversation_by_id(conversation_id=conversation_id)
 
-    def get_conversation_by_two_user_id(self, first_user_id: int, second_user_id: int) -> Conversation:
+    def get_conversation_by_two_user_id(self, first_user_id: str, second_user_id: str) -> Conversation:
         return self.conversation_repo.get_conversation_by_two_user_id(first_user_id=first_user_id, second_user_id=second_user_id)
     
     def create_conversation(self, conversation):
@@ -20,11 +20,21 @@ class ConversationService(IConversationService):
     def delete_conversation(self, conversation_id):
         pass
 
-    def handle_private_conversation(self, first_user_id: int, second_user_id: int) -> Conversation:
+    def get_conversations_by_user_id(self, user_id) -> List[Conversation]:
+        return self.conversation_repo.get_conversations_by_user_id(user_id=user_id)
+    
+    def get_message_from_conversation(self, cursor: int, conversation_id: int, limit: int = 10) -> List[Message]:
+        return self.conversation_repo.get_message_from_conversation(cursor=cursor, conversation_id=conversation_id, limit=limit)
+
+    def handle_private_conversation(self, first_user_id: str, second_user_id: str) -> Conversation:
         try:
-            conversation = self.get_conversation_by_two_user_id(first_user_id=min(first_user_id, second_user_id), second_user_id=max(first_user_id, second_user_id))
+            conversation = self.get_conversation_by_two_user_id(first_user_id=first_user_id, second_user_id=second_user_id)
             if (not conversation):
-                conversation = Conversation(main_user_id=first_user_id, secondary_user_id=second_user_id)
+                conversation = Conversation()
+                first_participant = Participant(user_id=first_user_id)
+                second_participant = Participant(user_id=second_user_id)
+                conversation.participants.extend([first_participant, second_participant])
+
                 conversation_after_create = self.create_conversation(conversation=conversation)
                 return conversation_after_create
             return conversation
@@ -32,8 +42,9 @@ class ConversationService(IConversationService):
             print(e)
             return None
         
-    def add_message_to_conversation(self, conversation_id: int, sender_id: int, content: str) -> Message:
-        message = Message(content=content, sender_id=sender_id, conversation_id=conversation_id)
+    def add_message_to_conversation(self, conversation: Conversation, sender_id: str, content: str) -> Message:
+        message = Message(content=content, sender_id=sender_id, conversation_id=conversation.conversation_id)
+        conversation.lastest_updated = datetime.now()
         return self.conversation_repo.add_message_to_conversation(message=message)
             
     # def get_conversation_from_two_user(self, first_user_id: int, second_user_id: int) -> Conversation:

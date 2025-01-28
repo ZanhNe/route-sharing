@@ -10,7 +10,7 @@ conversation_route_bp = Blueprint('conversation', __name__)
 
 
 @conversation_route_bp.route('/api/v1/user/conversation', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def get_conversation_id():
     json_data = request.get_json()
     first_user_id = json_data.get('first_user_id')
@@ -34,6 +34,29 @@ def get_conversation(conversation_id):
         return jsonify(status='failed', message='Conversation not found'), 404
     return conversation_schema.jsonify(obj=conversation), 200
 
+@conversation_route_bp.route('/api/v1/user/<int:user_id>/conversations', methods=['GET'])
+# @jwt_required()
+def get_conversations_of_user(user_id):
+    conversations = conversation_service.get_conversations_by_user_id(user_id=user_id)
+    return conversation_schema.dump(obj=conversations, many=True), 200
+    # return {}
+
+@conversation_route_bp.route('/api/v1/user/conversations/<int:conversation_id>/cursor/<int:cursor>', methods=['GET'])
+# @jwt_required()
+def get_list_messages(conversation_id, cursor):
+    messages = conversation_service.get_message_from_conversation(cursor=cursor, conversation_id=conversation_id)
+    return message_schema.jsonify(obj=messages, many=True)
+
+
+
+
+# @conversation_route_bp.route('/api/v1/user/conversations', methods=['POST'])
+# def test():
+#     json_data = request.get_json()
+#     first_user_id = json_data.get('first_user_id')
+#     second_user_id = json_data.get('second_user_id')
+#     conversation = conversation_service.get_conversation_by_two_user_id(first_user_id=first_user_id, second_user_id=second_user_id)
+#     return conversation_schema.jsonify(conversation)
 
 # @conversation_route_bp.route('/api/v1/user/conversation/<int:conversation_id>/message', methods=['POST'])
 # def add_message(conversation_id):
