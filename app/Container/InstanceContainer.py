@@ -19,6 +19,10 @@ from app.DAL.Interfaces.IScheduleShareRepository import IScheduleShareRepository
 # from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
 from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
 from app.DAL.Interfaces.IRoadmapRequestRepository import IRoadmapRequestRepository
+from app.DAL.Interfaces.ISchedulePairingManagementRepository import ISchedulePairingManagementRepository
+from app.DAL.Interfaces.ISchedulePairingRepository import ISchedulePairingRepository
+from app.DAL.Interfaces.IRoadmapPairingRepository import IRoadmapPairingRepository
+
 
 
 
@@ -40,6 +44,9 @@ from app.DAL.Repositories.ScheduleManagementRepository import ScheduleManagement
 from app.DAL.Repositories.ScheduleShareRepository import ScheduleShareRepository
 from app.DAL.Repositories.RoadmapShareRepository import RoadmapShareRepository
 from app.DAL.Repositories.RoadmapRequestRepository import RoadmapRequestRepository
+from app.DAL.Repositories.SchedulePairingManagementRepository import SchedulePairingManagementRepository
+from app.DAL.Repositories.SchedulePairingRepository import SchedulePairingRepository
+from app.DAL.Repositories.RoadmapPairingRepository import RoadmapPairingRepository
 
 
 from app.BLL.Interfaces.IRoleService import IRoleService
@@ -59,6 +66,11 @@ from app.BLL.Interfaces.IConversationService import IConversationService
 from app.BLL.Interfaces.IScheduleManagementService import IScheduleManagementService
 from app.BLL.Interfaces.IRoadmapShareService import IRoadmapShareService
 from app.BLL.Interfaces.IRoadmapRequestService import IRoadmapRequestService
+from app.BLL.Interfaces.IScheduleManagementShareRoute import IScheduleManagementShareRoute
+from app.BLL.Interfaces.IScheduleShareService import IScheduleShareService
+from app.BLL.Interfaces.ISchedulePairingManagementService import ISchedulePairingManagementService
+from app.BLL.Interfaces.ISchedulePairingService import ISchedulePairingService
+from app.BLL.Interfaces.IRoadmapPairingService import IRoadmapPairingService
 
 
 from app.BLL.Services.RoleService import RoleService
@@ -78,12 +90,18 @@ from app.BLL.Services.ConversationService import ConversationService
 from app.BLL.Services.ScheduleManagementService import ScheduleManagementService
 from app.BLL.Services.RoadmapShareService import RoadmapShareService
 from app.BLL.Services.RoadmapRequestService import RoadmapRequestService
+from app.BLL.Services.ScheduleManagementShareRoute import ScheduleManagementShareRoute
+from app.BLL.Services.ScheduleShareService import ScheduleShareService
+from app.BLL.Services.SchedulePairingManagementService import SchedulePairingManagementService
+from app.BLL.Services.SchedulePairingService import SchedulePairingService
+from app.BLL.Services.RoadmapPairingService import RoadmapPairingService
 
 
 
 from app.lib.lib_ma import UserSchema, RoleSchema, LocationSchema, RouteSchema, PlaceSchema, NotificationSchema, \
                             ConversationSchema, MessageSchema, ScheduleManagementSchema, RoadmapShareSchema, ScheduleShareItemSchema, \
-                            CreateRoadmapRequestValidator, RoadmapRequestSchema
+                            CreateRoadmapRequestValidator, RoadmapRequestSchema, UpdateScheduleManagementValidator \
+                            , UpdateScheduleShareValidator
 
 
 
@@ -110,6 +128,9 @@ repository_factory.register_container(IScheduleManagementRepository, ScheduleMan
 repository_factory.register_container(IScheduleShareRepository, ScheduleShareRepository)
 repository_factory.register_container(IRoadmapShareRepository, RoadmapShareRepository)
 repository_factory.register_container(IRoadmapRequestRepository, RoadmapRequestRepository)
+repository_factory.register_container(ISchedulePairingManagementRepository, SchedulePairingManagementRepository)
+repository_factory.register_container(ISchedulePairingRepository, SchedulePairingRepository)
+repository_factory.register_container(IRoadmapPairingRepository, RoadmapPairingRepository)
 
 
 
@@ -129,8 +150,13 @@ service_factory.register_container(INotificationService, NotificationService)
 service_factory.register_container(IConversationService, ConversationService)
 service_factory.register_container(IScheduleManagementService, ScheduleManagementService)
 service_factory.register_container(IRoadmapShareService, RoadmapShareService)
-service_factory.register_container(IRoadmapRequestService, RoadmapRequestService)
+service_factory.register_container(IRoadmapRequestService, RoadmapRequestService) 
+service_factory.register_container(IScheduleShareService, ScheduleShareService) 
 
+service_factory.register_container(IScheduleManagementShareRoute, ScheduleManagementShareRoute)
+service_factory.register_container(ISchedulePairingManagementService, SchedulePairingManagementService)
+service_factory.register_container(ISchedulePairingService, SchedulePairingService)
+service_factory.register_container(IRoadmapPairingService, RoadmapPairingService)
 
 
 
@@ -155,6 +181,10 @@ schedule_share_repository = repository_factory.resolve(IScheduleShareRepository)
 roadmap_share_repository = repository_factory.resolve(IRoadmapShareRepository)(session=db.session)
 roadmap_request_repository = repository_factory.resolve(IRoadmapRequestRepository)(session=db.session)
 
+schedule_pairing_management_repository = repository_factory.resolve(ISchedulePairingManagementRepository)(session=db.session)
+schedule_pairing_repository = repository_factory.resolve(ISchedulePairingRepository)(session=db.session)
+roadmap_pairing_repository = repository_factory.resolve(IRoadmapPairingRepository)(session=db.session)
+
 
 
 role_service = service_factory.resolve(IRoleService)(role_repository)
@@ -172,8 +202,21 @@ notification_service = service_factory.resolve(INotificationService)(notificatio
 # match_route_service = service_factory.resolve(IMatchRouteService)(match_route_repository)
 conversation_service = service_factory.resolve(IConversationService)(conversation_repository)
 schedule_management_service = service_factory.resolve(IScheduleManagementService)(schedule_management_repository, schedule_share_repository)
+schedule_share_service = service_factory.resolve(IScheduleShareService)(schedule_share_repository)
 roadmap_share_service = service_factory.resolve(IRoadmapShareService)(roadmap_share_repository)
 roadmap_request_service = service_factory.resolve(IRoadmapRequestService)(roadmap_request_repository)
+
+schedule_pairing_management_service = service_factory.resolve(ISchedulePairingManagementService)(schedule_pairing_management_repository)
+schedule_pairing_service = service_factory.resolve(ISchedulePairingService)(schedule_pairing_repository)
+roadmap_pairing_service = service_factory.resolve(IRoadmapPairingService)(roadmap_pairing_repository)
+
+schedule_management_share_route = service_factory\
+                                    .resolve(IScheduleManagementShareRoute)(schedule_management_service\
+                                                    , route_place_service, notification_service\
+                                                    , roadmap_request_service, schedule_share_service, roadmap_share_service\
+                                                    , schedule_pairing_management_service, schedule_pairing_service, roadmap_pairing_service)
+
+
 
 
 #init schema
@@ -193,6 +236,9 @@ schedule_management_schema = ScheduleManagementSchema()
 roadmap_share_schema = RoadmapShareSchema()
 create_roadmap_request_validator = CreateRoadmapRequestValidator()
 roadmap_request_schema = RoadmapRequestSchema()
+update_schedule_management_schema = UpdateScheduleManagementValidator()
+update_schedule_share_schema = UpdateScheduleShareValidator()
+
 
 
 

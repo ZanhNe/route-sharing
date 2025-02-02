@@ -11,3 +11,6 @@ class INotificationService(ABC):
     def add_new_notification_request_roadmap_of_user(self, validator: dict) -> Notification:
         pass
     
+    @abstractmethod
+    def add_new_notification_status_request(self, validator: dict) -> Notification:
+        pass

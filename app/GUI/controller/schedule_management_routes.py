@@ -2,11 +2,13 @@ from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from app.Container.InstanceContainer import schedule_management_service\
-                                    , schedule_management_schema, route_place_service, schedule_share_item_schema, roadmap_share_service\
-                                    , roadmap_share_schema, create_roadmap_request_validator, notification_service, roadmap_request_service\
-                                    , roadmap_request_schema, notification_schema
-                                    
+                                    , schedule_management_schema, schedule_share_item_schema, roadmap_share_service\
+                                    , roadmap_share_schema, create_roadmap_request_validator, roadmap_request_service\
+                                    , roadmap_request_schema, notification_schema, update_schedule_management_schema, schedule_management_share_route\
+                                    , update_schedule_share_schema           
 from app.BLL.Redis.utils.redis_utils import redis_client
+from app.decorator.decorator import middleware_auth
+from firebase_admin import auth
 import simplejson
 
 from app.BLL.Services.ScheduleManagementShareRoute import ScheduleManagementShareRoute
@@ -20,8 +22,13 @@ def get_all_schedule_managements_of_user(user_id):
     return schedule_management_schema.jsonify(obj=schedule_managements, many=True), 200
 
 @schedule_management_bp.route('/api/v1/schedule-managements/<int:schedule_management_id>', methods=['GET'])
+@middleware_auth
 def get_schedule_management_of_user(schedule_management_id):
+    id_token = request.headers.get('Authorization').split(' ')[1]
+    decode_token = auth.verify_id_token(id_token=id_token)
     schedule_management = schedule_management_service.get_schedule_management_by_schedule_management_id(schedule_management_id=schedule_management_id)
+    if (not schedule_management.is_open and schedule_management.user.user_id != decode_token['user_id']):
+        return jsonify(message='Không được phép truy cập danh sách đã đóng'), 403
     return schedule_management_schema.jsonify(obj=schedule_management), 200
 
 @schedule_management_bp.route('/api/v1/schedule-managements/users/<user_id>', methods=['POST'])
@@ -49,21 +56,28 @@ def get_all_schedule_managements_opening():
     schedule_managements = schedule_management_service.get_all_schedule_managements_opening()
     return schedule_management_schema.jsonify(obj=schedule_managements, many=True), 200
 
-@schedule_management_bp.route('/api/v1/schedule-managements/<int:schedule_management_id>/closed')
-def set_close_schedule_management(schedule_management_id):
-    pass
+@schedule_management_bp.route('/api/v1/schedule-managements/<int:schedule_management_id>', methods=['PUT'])
+def set_open_status_schedule_management(schedule_management_id):
+    try:
+        json_data = request.get_json()
+        update_schedule_management_validator = update_schedule_management_schema.load(json_data)
+        schedule_management = schedule_management_service.update_schedule_management(schedule_management_id=schedule_management_id, data=update_schedule_management_validator)
+        schedule_management_json = schedule_management_schema.dump(obj=schedule_management)
+        object_payload = simplejson.dumps(obj={'payload': schedule_management_json, 'include_self': False})
+        redis_client.publish('schedule_managements.update', object_payload)
+        return schedule_management_schema.jsonify(obj=schedule_management), 200
+    except Exception as e:
+        return jsonify(message=str(e)), 400
+
+
 
 @schedule_management_bp.route('/api/v1/schedule-managements/schedule-shares/roadmap/share', methods=['POST'])
 def handle_roadmaps_share_with_schedule():
     try:
-        schedule_management_share_route_service = ScheduleManagementShareRoute(route_place_service=route_place_service\
-                                                    , schedule_management_service=schedule_management_service\
-                                                    , notification_service=notification_service, roadmap_request_service=roadmap_request_service)
         schedule_setup_informations = request.get_json()
-        list_schedule_shares = schedule_management_share_route_service.handle_schedule_share(schedule_setup_informations=schedule_setup_informations)
+        list_schedule_shares = schedule_management_share_route.handle_schedule_share(schedule_setup_informations=schedule_setup_informations)
         list_schedule_shares_dict = schedule_share_item_schema.dump(obj=list_schedule_shares, many=True)
         return jsonify(message='Success', list_schedule_share=list_schedule_shares_dict), 200
-        # return schedule_share_schema.jsonify(obj=list_schedule_shares, many=True), 200
     except SQLAlchemyError as e:
         return jsonify(message='Lỗi khi thêm lộ trình vào lịch trình'), 400
     except Exception as e:
@@ -81,10 +95,7 @@ def handle_request_roadmap_share(schedule_share_id, roadmap_share_id):
     json_data = request.get_json()
     try:
         validator = create_roadmap_request_validator.load(data=json_data)
-        schedule_management_share_route_service = ScheduleManagementShareRoute(route_place_service=route_place_service\
-                                                    , schedule_management_service=schedule_management_service\
-                                                    , notification_service=notification_service, roadmap_request_service=roadmap_request_service)
-        roadmap_request, notification = schedule_management_share_route_service.add_new_request_roadmap(validator=validator, roadmap_share_id=roadmap_share_id)
+        roadmap_request, notification = schedule_management_share_route.add_new_request_roadmap(validator=validator, roadmap_share_id=roadmap_share_id)
         roadmap_request_json = roadmap_request_schema.dump(obj=roadmap_request)
         notification_json = notification_schema.dump(obj=notification)
 
@@ -105,7 +116,49 @@ def get_roadmaps_request_of_roadmap_share(roadmap_share_id):
     roadmap_requests = roadmap_request_service.get_roadmaps_request_by_roadmap_share_id(roadmap_share_id=roadmap_share_id)
     return roadmap_request_schema.jsonify(obj=roadmap_requests, many=True), 200
 
+@schedule_management_bp.route('/api/v1/schedules-share/<int:schedule_share_id>', methods=['PUT'])
+def update_schedule_share(schedule_share_id):
+    try:
+        json_data = request.get_json()
+        update_schedule_share_validator = update_schedule_share_schema.load(data=json_data)
+
+        schedule_share = schedule_management_share_route\
+                        .handle_update_schedule_share(update_schedule_share_validator=update_schedule_share_validator, schedule_share_id=schedule_share_id)
+        return schedule_share_item_schema.jsonify(obj=schedule_share), 200
+    except Exception as e:
+        print(e)
+        return jsonify(message=str(e)), 400
+
+@schedule_management_bp.route('/api/v1/roadmaps-share/<int:roadmap_share_id>/roadmap-requests/<int:roadmap_request_id>/accept', methods=['POST'])
+@middleware_auth
+def accept_roadmap_request(roadmap_share_id, roadmap_request_id):
+    try:
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decode_token = auth.verify_id_token(id_token=id_token)
+        main_user_id = decode_token['user_id']
+        roadmap_requests_of_roadmap_share, notification_pairing = schedule_management_share_route\
+                                                                    .handle_accept_roadmap_request(roadmap_request_id, main_user_id)
+        notification_pairing_json = notification_schema.dump(obj=notification_pairing)
+        noti_payloads = simplejson.dumps(obj={'payload': notification_pairing_json, 'include_self': False, 'send_to': notification_pairing.main_user_id})
+        redis_client.publish('notification.update', noti_payloads)
+        return roadmap_request_schema.jsonify(obj=roadmap_requests_of_roadmap_share, many=True), 200
+    except Exception as e:
+        print(e)
+        return jsonify(message=str(e)), 400
 
 
-
+@schedule_management_bp.route('/api/v1/users/<user_id>/roadmaps-request', methods=['GET'])
+@middleware_auth
+def get_roadmaps_request_of_user(user_id):
+    try:
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decode_token = auth.verify_id_token(id_token=id_token)
+        user_id_token = decode_token['user_id']
+        if (user_id_token != user_id):
+            raise Exception('Không có quyền truy cập tài nguyên không phải của bạn')
+        roadmaps_request = roadmap_request_service.get_roadmaps_request_by_sender_id(sender_id=user_id)
+        return roadmap_request_schema.jsonify(obj=roadmaps_request, many=True), 200
+    except Exception as e:
+        print(e)
+        return jsonify(message=str(e)), 400
         

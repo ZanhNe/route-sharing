@@ -25,6 +25,10 @@ class IScheduleManagementRepository(ABC):
         pass
 
     @abstractmethod
+    def update_schedule_management(self, schedule_management_id: int, data: dict) -> ScheduleManagement:
+        pass
+
+    @abstractmethod
     def get_schedule_management_by_id(self, schedule_management_id: int) -> ScheduleManagement:
         pass
 

@@ -67,7 +67,7 @@ class NotificationType(enum.Enum):
 class BaseParticipant(db.Model):
     __abstract__ = True
     participant_id: Mapped[int] = mapped_column('participant_id', primary_key=True, autoincrement=True)
-    last_viewed: Mapped[Optional[DateTime]] = mapped_column('last_viewed', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_viewed: Mapped[Optional[DateTime]] = mapped_column('last_viewed', DateTime, default=datetime.now, nullable=False)
     user_id: Mapped[str] = mapped_column('user_id', ForeignKey('user.user_id'))
 
 
@@ -92,8 +92,8 @@ class ParticipantGroup(BaseParticipant, db.Model):
 class BaseConversation(db.Model):
     __abstract__ = True
     conversation_id: Mapped[int] = mapped_column('conversation_id', primary_key=True, autoincrement=True)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    lastest_updated: Mapped[DateTime] = mapped_column('lastest_updated', DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
+    lastest_updated: Mapped[DateTime] = mapped_column('lastest_updated', DateTime, default=datetime.now, nullable=True)
 
 class Conversation(BaseConversation, db.Model):
     __tablename__ = 'conversation'
@@ -122,7 +122,7 @@ class BaseMessage(db.Model):
     __abstract__ = True
     message_id: Mapped[int] = mapped_column('message_id', primary_key=True, autoincrement=True)
     content: Mapped[str] = mapped_column('content', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)    
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)    
     sender_id: Mapped[str] = mapped_column('sender_id', ForeignKey('user.user_id'))
 
     @declared_attr
@@ -172,7 +172,7 @@ class MessageGroup(BaseMessage, db.Model):
 #     request_id: Mapped[int] = mapped_column('request_id', primary_key=True, autoincrement=True)
 #     status: Mapped[str] = mapped_column('status', Enum(Status), default=Status.PENDING)
 
-#     created_time: Mapped[DateTime] = mapped_column('created_time', DateTime, default=lambda: datetime.now(timezone.utc))
+#     created_time: Mapped[DateTime] = mapped_column('created_time', DateTime, default=datetime.now)
 
 #     main_user_id: Mapped[str] = mapped_column('main_user_id', ForeignKey('user.user_id'))
 #     secondary_user_id: Mapped[str] = mapped_column('secondary_user_id', ForeignKey('user.user_id'))
@@ -188,7 +188,7 @@ class Notification(db.Model):
     notification_id: Mapped[int] = mapped_column('notification_id', primary_key=True, autoincrement=True)
 
     content: Mapped[str] = mapped_column('content', String(1000), nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     is_read: Mapped[bool] = mapped_column('is_read', default=False, nullable=False)
     
     main_user_id: Mapped[str] = mapped_column('main_user_id', ForeignKey('user.user_id'))
@@ -223,7 +223,7 @@ class Place(db.Model):
     location: Mapped['Location'] = relationship(uselist=False, back_populates='place', lazy=True)
     routes: Mapped[List['Route']] = relationship(secondary=RouteDetail, back_populates='places', lazy=True)
 
-        
+  
 
 
 class Route(db.Model):
@@ -243,7 +243,7 @@ class Route(db.Model):
 #     is_match: Mapped[bool] = mapped_column('is_match', default=False, nullable=False)
 #     share_name: Mapped[str] = mapped_column('share_name', String(255), nullable=False)
 #     share_description: Mapped[str] = mapped_column('share_description', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-#     share_date: Mapped[DateTime] = mapped_column('share_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+#     share_date: Mapped[DateTime] = mapped_column('share_date', DateTime, default=datetime.now, nullable=False)
 
 #     start_time: Mapped[DateTime] = mapped_column('start_time', DateTime, nullable=False)
 #     end_time: Mapped[DateTime] = mapped_column('end_time', DateTime, nullable=False)
@@ -261,11 +261,14 @@ class ScheduleManagement(db.Model):
     content: Mapped[str] = mapped_column('content', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
     # status: Mapped[str] = mapped_column('status', Enum(StatusActive), default=StatusActive.OPEN, nullable=False)
     is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'), nullable=True)
 
     user: Mapped['User'] = relationship(back_populates='list_schedule_managements', lazy=True)
-    list_schedule_shares: Mapped[List['ScheduleShare']] = relationship(back_populates='schedule_management', order_by='ScheduleShare.departure_date', lazy=True)
+    list_schedule_shares: Mapped[List['ScheduleShare']] = relationship(back_populates='schedule_management'\
+                                                                       , order_by='ScheduleShare.departure_date'\
+                                                                       ,cascade='all, delete'\
+                                                                        , lazy=True)
 
 
 
@@ -274,13 +277,16 @@ class ScheduleShare(db.Model):
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
     # status: Mapped[str] = mapped_column('status', Enum(StatusActive), default=StatusActive.OPEN, nullable=False)
     is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     departure_date: Mapped[DateTime] = mapped_column('departure_date', DateTime, nullable=False)
 
     schedule_management_id: Mapped[int] = mapped_column('schedule_management_id', ForeignKey('schedule_management.id'))
     
     schedule_management: Mapped['ScheduleManagement'] = relationship(back_populates='list_schedule_shares', lazy=True)
-    list_roadmaps: Mapped[List['RoadmapShare']] = relationship(back_populates='schedule_share', lazy=True, order_by='RoadmapShare.estimated_departure_time')
+    list_roadmaps: Mapped[List['RoadmapShare']] = relationship(back_populates='schedule_share'\
+                                                               , lazy=True\
+                                                               , cascade='all, delete'\
+                                                                , order_by='RoadmapShare.estimated_departure_time')
 
     def checkValidRoadmapFromAnotherTime(self, time) -> bool:
         if (not len(self.list_roadmaps)):
@@ -288,7 +294,8 @@ class ScheduleShare(db.Model):
         
         # print(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time)
         # print(type(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time))
-        dt1 = datetime.fromisoformat(str(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time))
+        # dt1 = datetime.fromisoformat(str(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time))
+        dt1 = self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time
         dt2 = datetime.fromisoformat(time)
         return dt2 >= dt1
     
@@ -306,7 +313,7 @@ class RoadmapShare(db.Model):
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
     # status: Mapped[str] = mapped_column('status', Enum(StatusActive), default=StatusActive.OPEN, nullable=False)
     is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     estimated_departure_time: Mapped[DateTime] = mapped_column('estimated_departure_time', DateTime, nullable=False) #Giờ khởi hành dự kiến
     estimated_arrival_time: Mapped[DateTime] = mapped_column('estimated_arrival_time', DateTime, nullable=False) #Giờ đến nơi dự kiến
 
@@ -315,14 +322,16 @@ class RoadmapShare(db.Model):
 
     schedule_share: Mapped['ScheduleShare'] = relationship(back_populates='list_roadmaps', lazy=True)
     route: Mapped['Route'] = relationship(lazy=True)
-    roadmap_requests: Mapped[List['RoadmapRequest']] = relationship(back_populates='roadmap_share', lazy=True)
+    roadmap_requests: Mapped[List['RoadmapRequest']] = relationship(back_populates='roadmap_share'\
+                                                                    , cascade='all, delete'\
+                                                                    , lazy=True)
 
 
 class RoadmapRequest(db.Model):
     __tablename__ = 'roadmap_request'
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
     status: Mapped[str] = mapped_column('status', Enum(Status), default=Status.PENDING, nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
 
     roadmap_share_id: Mapped[int] = mapped_column('roadmap_share_id', ForeignKey('roadmap_share.id'))
     sender_id: Mapped[int] = mapped_column('sender_id', ForeignKey('user.user_id'))
@@ -335,7 +344,7 @@ class RoadmapRequest(db.Model):
 class SchedulePairingManagement(db.Model):
     __tablename__ = 'schedule_pairing_management'
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
 
     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'))
 
@@ -347,16 +356,16 @@ schedulepairing_roadmappairing = Table('schedulepairing_roadmappairing', db.meta
                     Column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id'), primary_key=True))
 
 
-class UserRoadmapPairing(db.Model):
-    __tablename__ = 'user_roadmap_pairing'
-    id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'))
-    roadmap_pairing_id: Mapped[int] = mapped_column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id'))
-    is_host: Mapped[bool] = mapped_column('is_host', nullable=False)
-    joined_date: Mapped[DateTime] = mapped_column('joined_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+# class UserRoadmapPairing(db.Model):
+#     __tablename__ = 'user_roadmap_pairing'
+#     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
+#     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'))
+#     roadmap_pairing_id: Mapped[int] = mapped_column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id'))
+#     is_host: Mapped[bool] = mapped_column('is_host', nullable=False)
+#     joined_date: Mapped[DateTime] = mapped_column('joined_date', DateTime, default=datetime.now, nullable=False)
 
-    user: Mapped['User'] = relationship(back_populates='list_roadmap_pairings', lazy=True)
-    roadmap_pairing: Mapped['RoadmapPairing'] = relationship(back_populates='list_user_pairings', lazy=True)
+#     user: Mapped['User'] = relationship(back_populates='list_roadmap_pairings', lazy=True)
+#     roadmap_pairing: Mapped['RoadmapPairing'] = relationship(back_populates='list_user_pairings', lazy=True)
 
 
 
@@ -366,10 +375,10 @@ class SchedulePairing(db.Model):
     __tablename__ = 'schedule_pairing'
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
     is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     departure_date: Mapped[DateTime] = mapped_column('departure_date', DateTime, nullable=False)
 
-    schedule_pairing_managemen_id: Mapped[int] = mapped_column('schedule_pairing_managemen_id', ForeignKey('schedule_pairing_management.id'))
+    schedule_pairing_management_id: Mapped[int] = mapped_column('schedule_pairing_management_id', ForeignKey('schedule_pairing_management.id'))
     
     schedule_pairing_management: Mapped['SchedulePairingManagement'] = relationship(back_populates='list_schedule_pairings', lazy=True)
     list_roadmap_pairings: Mapped[List['RoadmapPairing']] = relationship(secondary=schedulepairing_roadmappairing, back_populates='list_schedule_pairings', lazy=True)
@@ -379,15 +388,24 @@ class RoadmapPairing(db.Model):
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
     status: Mapped[str] = mapped_column('status', Enum(StatusMatch), default=StatusMatch.WAITING, nullable=False)
     # is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
-    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     actual_departure_time: Mapped[Optional[DateTime]] = mapped_column('actual_departure_time', DateTime, nullable=True) #Giờ khởi hành dự kiến
     actual_arrival_time: Mapped[Optional[DateTime]] = mapped_column('actual_arrival_time', DateTime, nullable=True) #Giờ đến nơi dự kiến  
 
-    route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
-    route: Mapped['Route'] = relationship(lazy=True)
+    # admin_id: Mapped[str] = mapped_column('admin_id', ForeignKey('user.user_id'))
+    # admin: Mapped['User'] = relationship(lazy=)
+
+    # roadmap_share_id: Mapped[int] = mapped_column('roadmap_share_id', ForeignKey('roadmap_share.id'))
+    # roadmap_share: Mapped['RoadmapShare'] = relationship(lazy=True)
+
+    # route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
+    # route: Mapped['Route'] = relationship(lazy=True)
+
+    roadmap_request_id: Mapped[int] = mapped_column('roadmap_request_id', ForeignKey('roadmap_request.id'))
+    roadmap_request: Mapped['RoadmapRequest'] = relationship(lazy=True)
 
     list_schedule_pairings: Mapped[List['SchedulePairing']] = relationship(secondary=schedulepairing_roadmappairing, back_populates='list_roadmap_pairings', lazy=True)
-    list_user_pairings: Mapped[List['UserRoadmapPairing']] = relationship(back_populates='roadmap_pairing', lazy=True)
+    # list_user_pairings: Mapped[List['UserRoadmapPairing']] = relationship(back_populates='roadmap_pairing', lazy=True)
 
 
     
@@ -403,7 +421,7 @@ class User(db.Model):
     background: Mapped[str] = mapped_column('background', String(300), nullable=True)
     phone: Mapped[str] = mapped_column('phone', String(11), unique=True, nullable=True)
     status : Mapped[str] = mapped_column('status', Enum(Status), default=Status.FREE)
-    created_time: Mapped[DateTime] = mapped_column('created_time', DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
+    created_time: Mapped[DateTime] = mapped_column('created_time', DateTime, default=datetime.now, nullable=True)
     updated_time: Mapped[Optional[DateTime]] = mapped_column('updated_time', DateTime, nullable=True)
 
 
@@ -416,7 +434,7 @@ class User(db.Model):
     notification_associations: Mapped[List['Notification']] = relationship(foreign_keys=[Notification.main_user_id], back_populates='main_user', lazy=True)
     list_schedule_managements: Mapped[List['ScheduleManagement']] = relationship(back_populates='user', lazy=True)
     roadmap_requests: Mapped[List['RoadmapRequest']] = relationship(back_populates='sender', lazy=True)
-    list_roadmap_pairings: Mapped[List['UserRoadmapPairing']] = relationship(back_populates='user', lazy=True)
+    # list_roadmap_pairings: Mapped[List['UserRoadmapPairing']] = relationship(back_populates='user', lazy=True)
 
 
 

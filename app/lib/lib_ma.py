@@ -1,6 +1,6 @@
 from app.GUI.model.models import Participant, Conversation, Message, User, Roles, Location, Route, Place,\
                                  Notification, ScheduleManagement, ScheduleShare, RoadmapShare, RoadmapRequest, SchedulePairingManagement, \
-                                 SchedulePairing, RoadmapPairing, UserRoadmapPairing
+                                 SchedulePairing, RoadmapPairing
 from marshmallow import fields, validates, ValidationError, post_dump, validate
 from flask_marshmallow import Marshmallow
 import simplejson
@@ -39,6 +39,14 @@ class CreateRoadmapRequestValidator(ma.Schema):
     receiver_id = fields.Str(required=True, validate=validate.Length(min=4))
     list_place_id = fields.List(fields.Str(), validate=validate.Length(min=2))
 
+class UpdateScheduleManagementValidator(ma.Schema):
+    title = fields.Str(required=True, error_messages={'required': 'Vui lòng điền đủ tiêu đề (title)'})
+    content = fields.Str(required=True, error_messages={'required': 'Vui lòng điền đủ nội dung (content)'})
+    is_open = fields.Bool()
+    
+class UpdateScheduleShareValidator(ma.Schema):
+    departure_date = fields.Str(required=True, error_messages={'required': 'Vui lòng chọn ngày khởi hành'})
+    is_open = fields.Bool()
 
 
 
@@ -102,9 +110,9 @@ class ScheduleManagementSchema(ma.SQLAlchemyAutoSchema):
     def add_utc_z(self, data, many, **kwargs):
         if many:
             for schedule_management in data:
-                schedule_management['created_date'] = f'{schedule_management['created_date']}Z'
+                schedule_management['created_date'] = f'{schedule_management['created_date']}+07:00'
         else:
-            data['created_date'] = f'{data['created_date']}Z'
+            data['created_date'] = f'{data['created_date']}+07:00'
         
         return data
 
@@ -124,11 +132,11 @@ class BaseScheduleShareSchema(ma.SQLAlchemyAutoSchema):
         if many:
             for schedule_share in data:
                 print(schedule_share)
-                schedule_share['created_date'] = f'{schedule_share['created_date']}Z'
-                schedule_share['departure_date'] = f'{schedule_share['departure_date']}Z'
+                schedule_share['created_date'] = f'{schedule_share['created_date']}+07:00'
+                schedule_share['departure_date'] = f'{schedule_share['departure_date']}+07:00'
         else:
-            data['created_date'] = f'{data['created_date']}Z'
-            data['departure_date'] = f'{data['departure_date']}Z'
+            data['created_date'] = f'{data['created_date']}+07:00'
+            data['departure_date'] = f'{data['departure_date']}+07:00'
         
         return data
 
@@ -160,13 +168,13 @@ class RoadmapShareSchema(ma.SQLAlchemyAutoSchema):
     def add_utc_z(self, data, many, **kwargs):
         if many:
             for schedule_share in data:
-                schedule_share['created_date'] = f'{schedule_share['created_date']}Z'
-                schedule_share['estimated_departure_time'] = f'{schedule_share['estimated_departure_time']}Z'
-                schedule_share['estimated_arrival_time'] = f'{schedule_share['estimated_arrival_time']}Z'
+                schedule_share['created_date'] = f'{schedule_share['created_date']}+07:00'
+                schedule_share['estimated_departure_time'] = f'{schedule_share['estimated_departure_time']}+07:00'
+                schedule_share['estimated_arrival_time'] = f'{schedule_share['estimated_arrival_time']}+07:00'
         else:
-            data['created_date'] = f'{data['created_date']}Z'
-            data['estimated_departure_time'] = f'{data['estimated_departure_time']}Z'
-            data['estimated_arrival_time'] = f'{data['estimated_arrival_time']}Z'
+            data['created_date'] = f'{data['created_date']}+07:00'
+            data['estimated_departure_time'] = f'{data['estimated_departure_time']}+07:00'
+            data['estimated_arrival_time'] = f'{data['estimated_arrival_time']}+07:00'
         
         return data
 
@@ -184,9 +192,9 @@ class RoadmapRequestSchema(ma.SQLAlchemyAutoSchema):
     def add_utc_z(self, data, many, **kwargs):
         if many:
             for roadmap_request in data:
-                roadmap_request['created_date'] = f'{roadmap_request['created_date']}Z'
+                roadmap_request['created_date'] = f'{roadmap_request['created_date']}+07:00'
         else:
-            data['created_date'] = f'{data['created_date']}Z'
+            data['created_date'] = f'{data['created_date']}+07:00'
         
         return data
 
@@ -201,14 +209,14 @@ class SchedulePairingManagementSchema(ma.SQLAlchemyAutoSchema):
         render_module = simplejson
     created_date = fields.DateTime(format='iso')
 
-class UserRoadmapPairingSchema(ma.SQLAlchemyAutoSchema):
-    user = ma.Nested('UserSchema', only=('user_id', 'user_name', 'avatar',))
-    roadmap_pairing = ma.Nested('RoadmapPairingSchema', exclude=('list_user_pairings',))
-    class Meta:
-        model = UserRoadmapPairing
-        load_instance = True
-        render_module = simplejson
-    joined_date = fields.DateTime(format='iso')
+# class UserRoadmapPairingSchema(ma.SQLAlchemyAutoSchema):
+#     user = ma.Nested('UserSchema', only=('user_id', 'user_name', 'avatar',))
+#     roadmap_pairing = ma.Nested('RoadmapPairingSchema', exclude=('list_user_pairings',))
+#     class Meta:
+#         model = UserRoadmapPairing
+#         load_instance = True
+#         render_module = simplejson
+#     joined_date = fields.DateTime(format='iso')
 
 class SchedulePairingSchema(ma.SQLAlchemyAutoSchema):
     schedule_pairing_management = ma.Nested('SchedulePairingManagementSchema', exclude=('list_schedule_pairings',))
@@ -273,9 +281,9 @@ class NotificationSchema(ma.SQLAlchemyAutoSchema):
     def add_utc_z(self, data, many, **kwargs):
         if many:
             for noti in data:
-                noti['created_date'] = f'{noti['created_date']}Z'
+                noti['created_date'] = f'{noti['created_date']}+07:00'
         else:
-            data['created_date'] = f'{data['created_date']}Z'
+            data['created_date'] = f'{data['created_date']}+07:00'
         
         return data
 

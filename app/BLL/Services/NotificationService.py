@@ -18,4 +18,11 @@ class NotificationService(INotificationService):
             return self.notification_repository.add_new_notification_of_user(notification=notification)
         except SQLAlchemyError as e:
             raise e
+        
+    def add_new_notification_status_request(self, validator: dict) -> Notification:
+        try:
+            notification = Notification(content=validator['content'], main_user_id=validator['receiver_id'], secondary_user_id=validator['sender_id'])
+            return self.notification_repository.add_new_notification_of_user(notification=notification)
+        except SQLAlchemyError as e:
+            raise e
 

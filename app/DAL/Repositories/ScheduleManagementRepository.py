@@ -28,6 +28,16 @@ class ScheduleManagementRepository(IScheduleManagementRepository):
     def get_all_schedule_managements_opening(self) -> List[ScheduleManagement]:
         return self.session.query(ScheduleManagement).filter(ScheduleManagement.is_open == True).order_by(ScheduleManagement.created_date.desc()).all()
 
+    def update_schedule_management(self, schedule_management_id: int, data: dict) -> ScheduleManagement:
+        try:
+            self.session.query(ScheduleManagement).filter(ScheduleManagement.id == schedule_management_id).update(data)
+            self.session.commit()
+            return self.session.query(ScheduleManagement).get(ident=schedule_management_id)
+        except SQLAlchemyError as e:
+            print(e)
+            self.session.rollback()
+            raise Exception('Lỗi khi cập nhật quản lý lịch trình')
+
     def create_schedule_management(self, schedule_management):
         try:
             self.session.add(schedule_management)

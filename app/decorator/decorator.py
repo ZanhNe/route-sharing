@@ -12,13 +12,11 @@ def middleware_auth(f):
             return f(*args, **kwargs)
         except auth.ExpiredIdTokenError as e:
             print(e)
-            return jsonify(error='Token da het han'), 400
+            return jsonify(message='Token da het han'), 400
         except auth.InvalidIdTokenError as e:
             print(e)
-            return jsonify(error='Token khong hop le'), 400
-        except Exception as e:
-            print(e)
-            return jsonify(error='Khong ton tai token'), 400
+            return jsonify(message='Token khong hop le'), 400
+        
     
     return wrapper
         

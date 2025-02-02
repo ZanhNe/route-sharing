@@ -34,6 +34,13 @@ class ScheduleManagementService(IScheduleManagementService):
     def create_schedule_management(self, schedule_management: ScheduleManagement):
         return self.schedule_management_repo.create_schedule_management(schedule_management=schedule_management)
     
+    def update_schedule_management(self, schedule_management_id: int, data: dict):
+        try:
+            return self.schedule_management_repo.update_schedule_management(schedule_management_id=schedule_management_id, data=data)
+        except Exception as e:
+            print(e)
+            raise e
+
     def handle_roadmaps_share(self, schedule_management_id: int, schedule_setup_informations: dict, route: Route) -> List[ScheduleShare]:
         try:
             list_schedules_share = []

@@ -15,8 +15,14 @@ class RoadmapRequestService(IRoadmapRequestService):
     def get_roadmaps_request_by_roadmap_share_id(self, roadmap_share_id):
         return self.roadmap_request_repository.get_roadmaps_request_by_roadmap_share_id(roadmap_share_id=roadmap_share_id)
     
+    def get_roadmaps_request_by_sender_id(self, sender_id):
+        return self.roadmap_request_repository.get_roadmaps_request_by_sender_id(sender_id=sender_id)
+
     def get_roadmap_request_by_roadmap_share_id_and_sender_id(self, roadmap_share_id, sender_id):
         return self.roadmap_request_repository.get_roadmap_request_by_roadmap_share_id_and_sender_id(roadmap_share_id=roadmap_share_id, sender_id=sender_id)
+
+    def update_accept_status_roadmap_request(self, sender_id: int, roadmap_request_id, roadmap_share_id):
+        return self.roadmap_request_repository.update_accept_status_roadmap_request(sender_id=sender_id, roadmap_request_id=roadmap_request_id, roadmap_share_id=roadmap_share_id)
 
 
     def add_new_roadmap_request(self, validator: dict, route_id: int, roadmap_share_id: int):

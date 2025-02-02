@@ -19,6 +19,10 @@ class IScheduleManagementService(ABC):
     @abstractmethod
     def get_all_schedule_management_by_user_id(self, user_id: int) -> List[ScheduleManagement]:
         pass
+
+    @abstractmethod
+    def update_schedule_management(self, schedule_management_id: int, data: dict):
+        pass
     
     @abstractmethod
     def get_all_schedule_managements_opening(self) -> List[ScheduleManagement]:
