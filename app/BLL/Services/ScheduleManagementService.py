@@ -6,6 +6,7 @@ from app.DAL.Interfaces.IScheduleManagementRepository import IScheduleManagement
 from app.DAL.Interfaces.IScheduleShareRepository import IScheduleShareRepository
 from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 class ScheduleManagementService(IScheduleManagementService):
     def __init__(self, schedule_management_repo: IScheduleManagementRepository, schedule_share_repo: IScheduleShareRepository):
@@ -13,42 +14,48 @@ class ScheduleManagementService(IScheduleManagementService):
         self.schedule_share_repo = schedule_share_repo
         
 
-    def get_all_schedule_management(self):
-        return self.schedule_management_repo.get_all_schedule_management()
+    def get_all_schedule_management(self, session: Session):
+        return self.schedule_management_repo.get_all_schedule_management(session=session)
     
-    def get_schedule_management_by_schedule_management_id(self, schedule_management_id: int) -> ScheduleManagement:
-        return self.schedule_management_repo.get_schedule_management_by_schedule_management_id(schedule_management_id=schedule_management_id)
+    def get_schedule_management_by_schedule_management_id(self, session: Session, schedule_management_id: int) -> ScheduleManagement:
+        return self.schedule_management_repo.get_schedule_management_by_schedule_management_id(session=session, schedule_management_id=schedule_management_id)
 
-    def get_all_schedule_management_by_user_id(self, user_id: int) -> List[ScheduleManagement]:
-        return self.schedule_management_repo.get_all_schedule_management_by_user_id(user_id=user_id)
+    def get_all_schedule_management_by_user_id(self, session: Session, user_id: int) -> List[ScheduleManagement]:
+        return self.schedule_management_repo.get_all_schedule_management_by_user_id(session=session, user_id=user_id)
     
-    def get_all_schedule_managements_opening(self) -> List[ScheduleManagement]:
-        return self.schedule_management_repo.get_all_schedule_managements_opening()
+    def get_all_schedule_managements_opening(self, session: Session) -> List[ScheduleManagement]:
+        return self.schedule_management_repo.get_all_schedule_managements_opening(session=session)
 
-    def get_schedule_management_by_id(self, schedule_management_id):
-        return self.schedule_management_repo.get_schedule_management_by_id(schedule_management_id=schedule_management_id)
+    def get_schedule_management_by_id(self, session: Session, schedule_management_id):
+        return self.schedule_management_repo.get_schedule_management_by_id(session=session, schedule_management_id=schedule_management_id)
     
-    def get_some_schedule_management_by_ids(self, list_schedule_management_id):
-        return self.schedule_management_repo.get_some_schedule_management_by_ids(list_schedule_management_id=list_schedule_management_id)
+    def get_some_schedule_management_by_ids(self, session: Session, list_schedule_management_id):
+        return self.schedule_management_repo.get_some_schedule_management_by_ids(session=session, list_schedule_management_id=list_schedule_management_id)
     
-    def create_schedule_management(self, schedule_management: ScheduleManagement):
-        return self.schedule_management_repo.create_schedule_management(schedule_management=schedule_management)
+    def create_schedule_management(self, session: Session, schedule_management: ScheduleManagement):
+        return self.schedule_management_repo.create_schedule_management(session=session, schedule_management=schedule_management)
     
-    def update_schedule_management(self, schedule_management_id: int, data: dict):
+    def update_schedule_management(self, session: Session, schedule_management_id: int, data: dict):
         try:
-            return self.schedule_management_repo.update_schedule_management(schedule_management_id=schedule_management_id, data=data)
-        except Exception as e:
+            schedule_management = self.schedule_management_repo.update_schedule_management(session=session, schedule_management_id=schedule_management_id, data=data)
+            session.commit()
+            return schedule_management
+        except SQLAlchemyError as e:
             print(e)
-            raise e
+            session.rollback()
+            raise Exception('Lỗi khi cập nhật schedule management')
+        finally:
+            session.close()
 
-    def handle_roadmaps_share(self, schedule_management_id: int, schedule_setup_informations: dict, route: Route) -> List[ScheduleShare]:
+    def handle_roadmaps_share(self, session: Session, schedule_management_id: int, schedule_setup_informations: dict, route: Route) -> List[ScheduleShare]:
         try:
             list_schedules_share = []
             for schedule in schedule_setup_informations['schedules']:
-                schedule_share = self.schedule_share_repo.get_schedule_share_by_departure_date_with_roadmap_open(departure_date=schedule['date'])
+                schedule_share = self.schedule_share_repo.get_schedule_share_by_departure_date_with_roadmap_open(session=session, departure_date=schedule['date'])
                 if (not schedule_share):
                     schedule_share = ScheduleShare(departure_date=datetime.fromisoformat(schedule['date']), schedule_management_id=schedule_management_id)
-                    schedule_share = self.schedule_share_repo.create_schedule_share(schedule_share=schedule_share)
+                    schedule_share = self.schedule_share_repo.create_schedule_share(session=session, schedule_share=schedule_share)
+                    session.flush()
                 schedule_share.logAllRoadmaps()
                 if (not schedule_share.checkValidRoadmapFromAnotherTime(schedule['times'][0]['departureTime'])):
                     raise Exception(f'Thời gian bắt đầu của lộ trình mới phải sau thời gian kết thúc của lộ trình ngày: {schedule_share.departure_date}')
@@ -58,10 +65,14 @@ class ScheduleManagementService(IScheduleManagementService):
                                                  , estimated_arrival_time=datetime.fromisoformat(times['arrivalTime'])\
                                                 , schedule_share_id=schedule_share.id, route_id=route.route_id)
                     list_roadmaps.append(roadmap_share)
-                schedule_share = self.schedule_share_repo.add_roadmaps_share_to_schedule_share(schedule_share=schedule_share, list_roadmap=list_roadmaps)
+                schedule_share = self.schedule_share_repo.add_roadmaps_share_to_schedule_share(session=session, schedule_share=schedule_share, list_roadmap=list_roadmaps)
+                session.flush()
                 list_schedules_share.append(schedule_share)
-            
+            session.commit()
             return list_schedules_share
         except (Exception, SQLAlchemyError) as e:
             print(e)
+            session.rollback()
             raise e
+        finally: 
+            session.close()

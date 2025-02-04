@@ -1,32 +1,26 @@
 from abc import ABC, abstractmethod
 from app.GUI.model.models import User
 from typing import List
+from sqlalchemy.orm import Session
 
 class IUserRepository(ABC):
     @abstractmethod
-    def get_user_all(self) -> List[User]:
+    def get_user_all(self, session: Session) -> List[User]:
         pass
 
     @abstractmethod
-    def get_user_by_id(self, user_id: str) -> User:
+    def get_user_by_id(self, session: Session, user_id: str) -> User:
         pass
     
     @abstractmethod
-    def get_user_by_account(self, user_account: str) -> User:
+    def get_user_by_account(self, session: Session, user_account: str) -> User:
         pass
     
     @abstractmethod
-    def add_user(self, user: User) -> User:
+    def add_user(self, session: Session, user: User) -> User:
         pass
 
     @abstractmethod
-    def update_user(self, user: User) -> User:
+    def update_user(self, session: Session, user: User) -> User:
         pass
     
-    @abstractmethod
-    def update_status_user(self, new_status: str, user: User) -> User:
-        pass
-
-    @abstractmethod
-    def update_status_user_request(self, main_user_id_accept: str, secondary_user_id_accept: str, list_declined_user_id: List[str]):    
-        pass

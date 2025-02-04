@@ -85,8 +85,17 @@ def handle_roadmaps_share_with_schedule():
         return jsonify(message=str(e)), 400
 
 @schedule_management_bp.route('/api/v1/schedule-shares/<int:schedule_share_id>/roadmaps-share', methods=['GET'])
+@middleware_auth
 def get_all_roadmaps_share_of_schedule_share(schedule_share_id):
+    id_token = request.headers.get('Authorization').split(' ')[1]
+    decode_token = auth.verify_id_token(id_token=id_token)
+    user_id = decode_token['user_id']
     roadmaps_share = roadmap_share_service.get_roadmaps_share_by_schedule_share_id(schedule_share_id=schedule_share_id)
+    return roadmap_share_schema.jsonify(obj=roadmaps_share, many=True), 200
+
+@schedule_management_bp.route('/api/v1/schedule-shares/<int:schedule_share_id>/roadmaps-share/is-open', methods=['GET'])
+def get_roadmaps_share_of_schedule_share_is_open(schedule_share_id):
+    roadmaps_share = roadmap_share_service.get_roadmaps_share_by_schedule_share_id_is_open(schedule_share_id=schedule_share_id)
     return roadmap_share_schema.jsonify(obj=roadmaps_share, many=True), 200
 
 
@@ -145,6 +154,18 @@ def accept_roadmap_request(roadmap_share_id, roadmap_request_id):
     except Exception as e:
         print(e)
         return jsonify(message=str(e)), 400
+    
+@schedule_management_bp.route('/api/v1/roadmaps-share/<int:roadmap_share_id>/roadmap-requests/<int:roadmap_request_id>/decline', methods=['POST'])
+@middleware_auth
+def decline_roadmap_request(roadmap_share_id, roadmap_request_id):
+    try:
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decode_token = auth.verify_id_token(id_token=id_token)
+        main_user_id = decode_token['user_id']
+        roadmap_request = schedule_management_share_route.handle_decline_roadmap_request(roadmap_request_id, main_user_id)
+        return roadmap_request_schema.jsonify(obj=roadmap_request), 200
+    except Exception as e:
+        return jsonify(message=str(e)), 401
 
 
 @schedule_management_bp.route('/api/v1/users/<user_id>/roadmaps-request', methods=['GET'])

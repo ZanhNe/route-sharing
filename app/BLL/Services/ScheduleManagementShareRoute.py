@@ -88,6 +88,8 @@ class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
                 raise Exception('User không có quyền truy cập vào tài nguyên của User khác')
             self.roadmap_request_service.update_accept_status_roadmap_request(sender_id=roadmap_request.sender_id, roadmap_share_id=roadmap_request.roadmap_share_id, roadmap_request_id=roadmap_request_id)
             
+            
+
             main_schedule_pairing_management = self.schedule_pairing_management_service\
                                                 .get_schedule_pairing_management_of_user(user_id=main_user_id)
             secondary_schedule_pairing_management = self.schedule_pairing_management_service\
@@ -110,6 +112,18 @@ class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
             #Khúc này sẽ tạo các notification cho các user bị declined rồi phát cho họ (tính sau)
             roadmap_requests_of_roadmap_share = self.roadmap_request_service.get_roadmaps_request_by_roadmap_share_id(roadmap_share_id=roadmap_request.roadmap_share_id)
             return roadmap_requests_of_roadmap_share, notification_pairing
+        except Exception as e:
+            print(e)
+            raise e
+        
+    def handle_declined_roadmap_request(self, roadmap_request_id: int, main_user_id: str):
+        try:
+            roadmap_request = self.roadmap_request_service.get_roadmap_request_by_request_id(roadmap_request_id=roadmap_request_id)
+            if (roadmap_request.roadmap_share.schedule_share.schedule_management.user_id != main_user_id):
+                raise Exception('User không có quyền truy cập vào tài nguyên của User khác')
+            roadmap_request = self.roadmap_request_service\
+                    .update_declined_status_roadmap_request(sender_id=roadmap_request.sender_id, roadmap_request_id=roadmap_request.id)
+            return roadmap_request
         except Exception as e:
             print(e)
             raise e

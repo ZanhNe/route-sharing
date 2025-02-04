@@ -20,4 +20,8 @@ class IScheduleManagementShareRoute(ABC):
     @abstractmethod
     def handle_accept_roadmap_request(self, roadmap_request_id: int, main_user_id: str):
         pass
+
+    @abstractmethod
+    def handle_declined_roadmap_request(self, roadmap_request_id: int, main_user_id: str):
+        pass
     

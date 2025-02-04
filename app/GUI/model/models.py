@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 class Base(DeclarativeBase):
     pass
 
-db = SQLAlchemy(model_class=Base)
+db = SQLAlchemy(model_class=Base, session_options={'autobegin': False})
 
 
 route_location = Table('route_location', 

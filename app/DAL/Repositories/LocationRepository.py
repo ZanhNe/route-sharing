@@ -5,77 +5,49 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.DAL.Interfaces.ILocationRepository import ILocationRepository
 
 class LocationRepository(ILocationRepository):
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
-    def get_locations_all(self) -> List[Location]:
-        return self.session.query(Location).all()
     
-    def get_location(self, location_id: int) -> Location:
-        try: 
-            location = self.session.query(Location).get(ident=location_id)
-            if (not location):
-                raise Exception('Location not found')
-            return location
-        except Exception as e:
-            print(e)
-            return None
+
+    def get_locations_all(self, session: Session) -> List[Location]:
+        return session.query(Location).all()
+    
+    def get_location(self, session: Session, location_id: int) -> Location:
+        location = session.query(Location).get(ident=location_id)
+        return location
+
         
-    def get_location_by_address(self, location_address: str) -> Location:
-        try:
-            location = self.session.query(Location).filter(Location.address == location_address).first()
-            print(location)
-            if (not location):
-                raise Exception('Location not found')
-            return location
-        except Exception as e:
-            print(e)
-            return None
+    def get_location_by_address(self, session: Session, location_address: str) -> Location:
+        location = session.query(Location).filter(Location.address == location_address).first()
+        return location
     
-    def get_locations_by_address(self, list_address: List[str]) -> List[Location]:
-        return self.session.query(Location).filter(Location.address.in_(list_address)).all()
+    def get_locations_by_address(self, session: Session, list_address: List[str]) -> List[Location]:
+        return session.query(Location).filter(Location.address.in_(list_address)).all()
 
     
-    def add_location(self, location: Location) -> Location:
-        try:
-            self.session.add(location)
-            self.session.commit()
-            return location
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            print(e)
-            return None
-    
-    def update_location(self, location_id: int, new_location: Location) -> Location:
-        try:
-            location = self.get_location(location_id=location_id)
-            if location:
-                location['address'] = new_location['address']
-                location['latitude'] = new_location['latitude']
-                location['longitude'] = new_location['longitude']
-                location['routes'] = new_location['routes']
-                location['users'] = new_location['users']
+    def add_location(self, session: Session, location: Location) -> Location:
+        session.add(location)
+        return location
 
-                self.session.commit()
-
-            return location 
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            print(e)
-            return None
     
-    def delete_location(self, location_id: int) -> bool:
-        try: 
-            location = self.get_location(location_id=location_id)
-            if (not location):
-                raise Exception('Location not found')
-            self.session.delete(location)
-            self.session.commit()
-            return True
-        except SQLAlchemyError as e:
-            self.session.rollback()
-            print(e)
-        except Exception as e:
-            print(e)
-        finally:
-            return False
+    def update_location(self, session: Session, location_id: int, new_location: Location) -> Location:
+        query = session.query(Location).filter(Location.location_id == location_id)
+        query.update({'address': new_location['address'], 'latitude': new_location['latitude'], 'longitude': new_location['longitude'], 'routes': new_location['routes'], 'users': new_location['users']})
+        location = query.first()
+        return location 
+
+    
+    def delete_location(self, session: Session, location_id: int) -> bool:
+        # try: 
+        #     location = self.get_location(location_id=location_id)
+        #     if (not location):
+        #         raise Exception('Location not found')
+        #     session.delete(location)
+        #     session.commit()
+        #     return True
+        # except SQLAlchemyError as e:
+        #     session.rollback()
+        #     print(e)
+        # except Exception as e:
+        #     print(e)
+        # finally:
+        #     return False
+        pass

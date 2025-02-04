@@ -1,31 +1,36 @@
 from abc import ABC, abstractmethod
 from app.GUI.model.models import ScheduleShare, RoadmapShare
 from typing import List
+from sqlalchemy.orm import Session
 
 class IScheduleShareRepository(ABC):
 
     @abstractmethod
-    def get_schedule_share_by_id(self, schedule_share_id) -> ScheduleShare:
+    def get_schedule_share_by_id(self, session: Session, schedule_share_id) -> ScheduleShare:
         pass
 
     @abstractmethod
-    def get_schedule_share_by_departure_date(self, departure_date) -> ScheduleShare:
+    def get_schedule_share_by_departure_date(self, session: Session, departure_date) -> ScheduleShare:
         pass
 
     @abstractmethod
-    def get_schedule_share_by_departure_date_with_roadmap_open(self, departure_date) -> ScheduleShare:
+    def get_schedule_share_by_departure_date_with_roadmap_open(self, session: Session, departure_date) -> ScheduleShare:
         pass
 
     @abstractmethod
-    def add_roadmaps_share_to_schedule_share(self, schedule_share: ScheduleShare, list_roadmap: List[RoadmapShare]) -> ScheduleShare:
+    def add_roadmaps_share_to_schedule_share(self, session: Session, schedule_share: ScheduleShare, list_roadmap: List[RoadmapShare]) -> ScheduleShare:
         pass
 
     @abstractmethod
-    def update_schedule_share(self, conditions: dict, data: dict) -> ScheduleShare:
+    def update_schedule_share(self, session: Session, conditions: dict, data: dict) -> ScheduleShare:
         pass
 
     @abstractmethod
-    def create_schedule_share(self, schedule_share) -> ScheduleShare:
+    def update_schedules_share(self, session: Session, conditions: dict, data: dict) -> List[ScheduleShare]:
+        pass
+
+    @abstractmethod
+    def create_schedule_share(self, session: Session, schedule_share) -> ScheduleShare:
         pass
 
     

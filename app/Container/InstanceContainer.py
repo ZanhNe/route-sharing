@@ -1,22 +1,17 @@
 from app.GUI.model.models import db
+from app.custom.Helper.Helper import TransactionManager
 from .DIContainer import RepositoryDIContainer, ServiceDIContainer
 from app.DAL.Interfaces.IRoleRepository import IRoleRepository
 from app.DAL.Interfaces.IUserRepository import IUserRepository
 from app.DAL.Interfaces.ILocationRepository import ILocationRepository
 from app.DAL.Interfaces.IRouteRepository import IRouteRepository
-from app.DAL.Interfaces.IUserLocationRepository import IUserLocationRepository
 from app.DAL.Interfaces.IUserRoleRepository import IUserRoleRepository
 from app.DAL.Interfaces.IRoutePlaceRepository import IRoutePlaceRepository
-from app.DAL.Interfaces.IUserRouteRepository import IUserRouteRepository
 from app.DAL.Interfaces.IPlaceRepository import IPlaceRepository
-# from app.DAL.Interfaces.IRouteShareRepository import IRouteShareRepository
-# from app.DAL.Interfaces.IRequestRouteRepository import IRequestRouteRepository
 from app.DAL.Interfaces.INotificationRepository import INotificationRepository
-# from app.DAL.Interfaces.IMatchRouteRepository import IMatchRouteRepository
 from app.DAL.Interfaces.IConversationRepository import IConversationRepository
 from app.DAL.Interfaces.IScheduleManagementRepository import IScheduleManagementRepository
 from app.DAL.Interfaces.IScheduleShareRepository import IScheduleShareRepository
-# from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
 from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
 from app.DAL.Interfaces.IRoadmapRequestRepository import IRoadmapRequestRepository
 from app.DAL.Interfaces.ISchedulePairingManagementRepository import ISchedulePairingManagementRepository
@@ -30,15 +25,10 @@ from app.DAL.Repositories.RoleRepository import RoleRepository
 from app.DAL.Repositories.UserRepository import UserRepository
 from app.DAL.Repositories.LocationRepository import LocationRepository
 from app.DAL.Repositories.RouteRepository import RouteRepository
-from app.DAL.Repositories.UserLocationRepository import UserLocationRepository
 from app.DAL.Repositories.UserRoleRepository import UserRoleRepository
 from app.DAL.Repositories.RoutePlaceRepository import RoutePlaceRepository
-from app.DAL.Repositories.UserRouteRepository import UserRouteRepository
 from app.DAL.Repositories.PlaceRepository import PlaceRepository
-# from app.DAL.Repositories.RouteShareRepository import RouteShareRepository
-# from app.DAL.Repositories.RequestRouteRepository import RequestRouteRepository
 from app.DAL.Repositories.NotificationRepository import NotificationRepository
-# from app.DAL.Repositories.MatchRouteRepository import MatchRouteRepository
 from app.DAL.Repositories.ConversationRepository import ConversationRepository
 from app.DAL.Repositories.ScheduleManagementRepository import ScheduleManagementRepository
 from app.DAL.Repositories.ScheduleShareRepository import ScheduleShareRepository
@@ -53,15 +43,10 @@ from app.BLL.Interfaces.IRoleService import IRoleService
 from app.BLL.Interfaces.IUserService import IUserService
 from app.BLL.Interfaces.ILocationService import ILocationService
 from app.BLL.Interfaces.IRouteService import IRouteService
-from app.BLL.Interfaces.IUserLocationService import IUserLocationService
 from app.BLL.Interfaces.IUserRoleService import IUserRoleService
 from app.BLL.Interfaces.IRoutePlaceService import IRoutePlaceService
-from app.BLL.Interfaces.IUserRouteService import IUserRouteService
 from app.BLL.Interfaces.IPlaceService import IPlaceService
-# from app.BLL.Interfaces.IRouteShareService import IRouteShareService
-# from app.BLL.Interfaces.IRequestRouteService import IRequestRouteService
 from app.BLL.Interfaces.INotificationService import INotificationService
-# from app.BLL.Interfaces.IMatchRouteService import IMatchRouteService
 from app.BLL.Interfaces.IConversationService import IConversationService
 from app.BLL.Interfaces.IScheduleManagementService import IScheduleManagementService
 from app.BLL.Interfaces.IRoadmapShareService import IRoadmapShareService
@@ -77,15 +62,11 @@ from app.BLL.Services.RoleService import RoleService
 from app.BLL.Services.UserService import UserService
 from app.BLL.Services.LocationService import LocationService
 from app.BLL.Services.RouteService import RouteService
-from app.BLL.Services.UserLocationService import UserLocationService
+from app.BLL.Services.PlaceService import PlaceService
+
 from app.BLL.Services.UserRoleService import UserRoleService
 from app.BLL.Services.RoutePlaceService import RoutePlaceService
-from app.BLL.Services.UserRouteService import UserRouteService
-from app.BLL.Services.PlaceService import PlaceService
-# from app.BLL.Services.RouteShareService import RouteShareService
-# from app.BLL.Services.RequestRouteService import RequestRouteService
 from app.BLL.Services.NotificationService import NotificationService
-# from app.BLL.Services.MatchRouteService import MatchRouteService
 from app.BLL.Services.ConversationService import ConversationService
 from app.BLL.Services.ScheduleManagementService import ScheduleManagementService
 from app.BLL.Services.RoadmapShareService import RoadmapShareService
@@ -104,6 +85,57 @@ from app.lib.lib_ma import UserSchema, RoleSchema, LocationSchema, RouteSchema, 
                             , UpdateScheduleShareValidator
 
 
+from injector import Module, singleton, Injector
+
+class TransactionModule(Module):
+    def configure(self, binder):
+        binder.bind(interface=TransactionManager, to=TransactionManager(session=db.session), scope=singleton)
+
+class RepositoryModule(Module):
+    def configure(self, binder):
+        binder.bind(interface=IRoleRepository, to=RoleRepository, scope=singleton)
+        binder.bind(interface=IUserRepository, to=UserRepository, scope=singleton)
+        binder.bind(interface=ILocationRepository, to=LocationRepository, scope=singleton)
+        binder.bind(interface=IRouteRepository, to=RouteRepository, scope=singleton)
+        binder.bind(interface=IUserRoleRepository, to=UserRoleRepository, scope=singleton)
+        binder.bind(interface=IRoutePlaceRepository, to=RoutePlaceRepository, scope=singleton)
+        binder.bind(interface=IPlaceRepository, to=PlaceRepository, scope=singleton)
+        binder.bind(interface=INotificationRepository, to=NotificationRepository, scope=singleton)
+        binder.bind(interface=IConversationRepository, to=ConversationRepository, scope=singleton)
+        binder.bind(interface=IScheduleManagementRepository, to=ScheduleManagementRepository, scope=singleton)
+        binder.bind(interface=IScheduleShareRepository, to=ScheduleShareRepository, scope=singleton)
+        binder.bind(interface=IRoadmapShareRepository, to=RoadmapShareRepository, scope=singleton)
+        binder.bind(interface=IRoadmapRequestRepository, to=RoadmapRequestRepository, scope=singleton)
+        binder.bind(interface=ISchedulePairingManagementRepository, to=SchedulePairingManagementRepository, scope=singleton)
+        binder.bind(interface=ISchedulePairingRepository, to=SchedulePairingRepository, scope=singleton)
+        binder.bind(interface=IRoadmapPairingRepository, to=RoadmapPairingRepository, scope=singleton)
+
+class ServiceModule(Module):
+    def configure(self, binder):
+        binder.bind(interface=IRoleService, to=RoleService, scope=singleton)
+        binder.bind(interface=IUserService, to=UserService, scope=singleton)
+        binder.bind(interface=ILocationService, to=LocationService, scope=singleton)
+        binder.bind(interface=IRouteService, to=RouteService, scope=singleton)
+        binder.bind(interface=IUserRoleService, to=UserRoleService, scope=singleton)
+        binder.bind(interface=IRoutePlaceService, to=RoutePlaceService, scope=singleton)
+        binder.bind(interface=INotificationService, to=NotificationService, scope=singleton)
+        binder.bind(interface=IConversationService, to=ConversationService, scope=singleton)
+        binder.bind(interface=IScheduleManagementService, to=ScheduleManagementService, scope=singleton)
+        binder.bind(interface=IRoadmapShareService, to=RoadmapShareService, scope=singleton)
+        binder.bind(interface=IRoadmapRequestService, to=RoadmapRequestService, scope=singleton)
+        binder.bind(interface=IScheduleShareService, to=ScheduleShareService, scope=singleton)
+        binder.bind(interface=IScheduleManagementShareRoute, to=ScheduleManagementShareRoute, scope=singleton)
+        binder.bind(interface=ISchedulePairingManagementService, to=SchedulePairingManagementService, scope=singleton)
+        binder.bind(interface=ISchedulePairingService, to=SchedulePairingService, scope=singleton)
+        binder.bind(interface=IRoadmapPairingService, to=RoadmapPairingService, scope=singleton)
+
+            
+
+        
+
+
+        
+injector = Injector([RepositoryModule(), ServiceModule()])
 
 #initial
 repository_factory = RepositoryDIContainer()
@@ -114,15 +146,10 @@ repository_factory.register_container(IRoleRepository, RoleRepository)
 repository_factory.register_container(IUserRepository, UserRepository)
 repository_factory.register_container(ILocationRepository, LocationRepository)
 repository_factory.register_container(IRouteRepository, RouteRepository)
-repository_factory.register_container(IUserLocationRepository, UserLocationRepository)
 repository_factory.register_container(IUserRoleRepository, UserRoleRepository)
 repository_factory.register_container(IRoutePlaceRepository, RoutePlaceRepository)
-repository_factory.register_container(IUserRouteRepository, UserRouteRepository)
 repository_factory.register_container(IPlaceRepository, PlaceRepository)
-# repository_factory.register_container(IRouteShareRepository, RouteShareRepository)
-# repository_factory.register_container(IRequestRouteRepository, RequestRouteRepository)
 repository_factory.register_container(INotificationRepository, NotificationRepository)
-# repository_factory.register_container(IMatchRouteRepository, MatchRouteRepository)
 repository_factory.register_container(IConversationRepository, ConversationRepository)
 repository_factory.register_container(IScheduleManagementRepository, ScheduleManagementRepository)
 repository_factory.register_container(IScheduleShareRepository, ScheduleShareRepository)
@@ -138,15 +165,10 @@ service_factory.register_container(IRoleService, RoleService)
 service_factory.register_container(IUserService, UserService)
 service_factory.register_container(ILocationService, LocationService)
 service_factory.register_container(IRouteService, RouteService)
-service_factory.register_container(IUserLocationService, UserLocationService)
+service_factory.register_container(IPlaceService, PlaceService)
 service_factory.register_container(IUserRoleService, UserRoleService)
 service_factory.register_container(IRoutePlaceService, RoutePlaceService)
-service_factory.register_container(IUserRouteService, UserRouteService)
-service_factory.register_container(IPlaceService, PlaceService)
-# service_factory.register_container(IRouteShareService, RouteShareService)
-# service_factory.register_container(IRequestRouteService, RequestRouteService)
 service_factory.register_container(INotificationService, NotificationService)
-# service_factory.register_container(IMatchRouteService, MatchRouteService)
 service_factory.register_container(IConversationService, ConversationService)
 service_factory.register_container(IScheduleManagementService, ScheduleManagementService)
 service_factory.register_container(IRoadmapShareService, RoadmapShareService)
@@ -162,44 +184,33 @@ service_factory.register_container(IRoadmapPairingService, RoadmapPairingService
 
 
 #get instance 
-role_repository = repository_factory.resolve(IRoleRepository)(session=db.session)
-user_repository = repository_factory.resolve(IUserRepository)(session=db.session)
-location_repository = repository_factory.resolve(ILocationRepository)(session=db.session)
-route_repository = repository_factory.resolve(IRouteRepository)(session=db.session)
-user_location_repository = repository_factory.resolve(IUserLocationRepository)(session=db.session)
-user_role_repository = repository_factory.resolve(IUserRoleRepository)(session=db.session)
-route_place_repository = repository_factory.resolve(IRoutePlaceRepository)(session=db.session)
-user_route_repository = repository_factory.resolve(IUserRouteRepository)(session=db.session)
-place_repository = repository_factory.resolve(IPlaceRepository)(session=db.session)
-# route_share_repository = repository_factory.resolve(IRouteShareRepository)(session=db.session)
-# request_route_repository = repository_factory.resolve(IRequestRouteRepository)(session=db.session)
-notification_repository = repository_factory.resolve(INotificationRepository)(session=db.session)
-# match_route_repository = repository_factory.resolve(IMatchRouteRepository)(session=db.session)
-conversation_repository = repository_factory.resolve(IConversationRepository)(session=db.session)
-schedule_management_repository = repository_factory.resolve(IScheduleManagementRepository)(session=db.session)
-schedule_share_repository = repository_factory.resolve(IScheduleShareRepository)(session=db.session)
-roadmap_share_repository = repository_factory.resolve(IRoadmapShareRepository)(session=db.session)
-roadmap_request_repository = repository_factory.resolve(IRoadmapRequestRepository)(session=db.session)
+role_repository = repository_factory.resolve(IRoleRepository)()
+user_repository = repository_factory.resolve(IUserRepository)()
+location_repository = repository_factory.resolve(ILocationRepository)()
+route_repository = repository_factory.resolve(IRouteRepository)()
+user_role_repository = repository_factory.resolve(IUserRoleRepository)()
+route_place_repository = repository_factory.resolve(IRoutePlaceRepository)()
+place_repository = repository_factory.resolve(IPlaceRepository)()
+notification_repository = repository_factory.resolve(INotificationRepository)()
+conversation_repository = repository_factory.resolve(IConversationRepository)()
+schedule_management_repository = repository_factory.resolve(IScheduleManagementRepository)()
+schedule_share_repository = repository_factory.resolve(IScheduleShareRepository)()
+roadmap_share_repository = repository_factory.resolve(IRoadmapShareRepository)()
+roadmap_request_repository = repository_factory.resolve(IRoadmapRequestRepository)()
 
-schedule_pairing_management_repository = repository_factory.resolve(ISchedulePairingManagementRepository)(session=db.session)
-schedule_pairing_repository = repository_factory.resolve(ISchedulePairingRepository)(session=db.session)
-roadmap_pairing_repository = repository_factory.resolve(IRoadmapPairingRepository)(session=db.session)
-
+schedule_pairing_management_repository = repository_factory.resolve(ISchedulePairingManagementRepository)()
+schedule_pairing_repository = repository_factory.resolve(ISchedulePairingRepository)()
+roadmap_pairing_repository = repository_factory.resolve(IRoadmapPairingRepository)()
 
 
 role_service = service_factory.resolve(IRoleService)(role_repository)
 user_service = service_factory.resolve(IUserService)(user_repository, role_repository)
 location_service = service_factory.resolve(ILocationService)(location_repository)
 route_service = service_factory.resolve(IRouteService)(route_repository)
-user_location_service = service_factory.resolve(IUserLocationService)(user_location_repository)
 user_role_service = service_factory.resolve(IUserRoleService)(user_role_repository)
 route_place_service = service_factory.resolve(IRoutePlaceService)(route_place_repository=route_place_repository, place_repository=place_repository, route_repository=route_repository)
-user_route_service = service_factory.resolve(IUserRouteService)(user_route_repository=user_route_repository, user_repository=user_repository, route_repository=route_repository)
 place_service = service_factory.resolve(IPlaceService)(place_repository)
-# route_share_service = service_factory.resolve(IRouteShareService)(route_share_repository)
-# request_route_service = service_factory.resolve(IRequestRouteService)(request_route_repository)
 notification_service = service_factory.resolve(INotificationService)(notification_repository)
-# match_route_service = service_factory.resolve(IMatchRouteService)(match_route_repository)
 conversation_service = service_factory.resolve(IConversationService)(conversation_repository)
 schedule_management_service = service_factory.resolve(IScheduleManagementService)(schedule_management_repository, schedule_share_repository)
 schedule_share_service = service_factory.resolve(IScheduleShareService)(schedule_share_repository)
@@ -226,10 +237,7 @@ location_schema = LocationSchema()
 schedule_share_item_schema = ScheduleShareItemSchema()
 route_schema = RouteSchema()
 place_schema = PlaceSchema()
-# route_share_schema = UserRouteShareSchema()
-# request_route_schema = RequestRouteSchema()
 notification_schema = NotificationSchema()
-# match_route_schema = MatchRouteSchema()
 conversation_schema = ConversationSchema()
 message_schema = MessageSchema()
 schedule_management_schema = ScheduleManagementSchema()
