@@ -3,7 +3,6 @@ from typing import List
 from app.GUI.model.models import Place, Location
 
 class IPlaceService(ABC):
-
     @abstractmethod
     def get_place(self, place_id: str) -> Place:
         pass

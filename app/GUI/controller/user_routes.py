@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.GUI.model.models import User
-from app.Container.InstanceContainer import user_service, user_schema
+from app.BLL.Interfaces.IUserService import IUserService
+from app.Container.InstanceContainer import user_schema, injector
 from app.extentions.extentions import bcrypt
 from app.BLL.Redis.utils.redis_utils import redis_client
 from firebase_admin import auth
@@ -8,7 +9,10 @@ from datetime import datetime
 from app.utils.utils import Helper
 from app.decorator.decorator import middleware_auth
 import cloudinary.uploader
+
 user_bp = Blueprint('user', __name__)
+
+user_service = injector.get(interface=IUserService)
 
 @user_bp.route('/api/v1/users', methods=['GET'])
 def get_user_all():

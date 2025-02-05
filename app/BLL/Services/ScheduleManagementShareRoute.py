@@ -10,16 +10,20 @@ from app.BLL.Interfaces.ISchedulePairingManagementService import ISchedulePairin
 from app.BLL.Interfaces.IRoadmapShareService import IRoadmapShareService
 from app.BLL.Interfaces.ISchedulePairingService import ISchedulePairingService
 from app.BLL.Interfaces.IRoadmapPairingService import IRoadmapPairingService
+from app.custom.Helper.Helper import TransactionManager
+from injector import inject
 
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timedelta, timezone
 
 class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
+    @inject
     def __init__(self, schedule_management_service: IScheduleManagementService \
                  , route_place_service: IRoutePlaceService, notification_service: INotificationService \
                 , roadmap_request_service: IRoadmapRequestService, schedule_share_service: IScheduleShareService \
                 , roadmap_share_service: IRoadmapShareService, schedule_pairing_management_service: ISchedulePairingManagementService\
-                , schedule_pairing_service: ISchedulePairingService, roadmap_pairing_service: IRoadmapPairingService):
+                , schedule_pairing_service: ISchedulePairingService, roadmap_pairing_service: IRoadmapPairingService\
+                , tm: TransactionManager):
         self.schedule_management_service = schedule_management_service
         self.route_place_service = route_place_service
         self.notification_service = notification_service
@@ -29,33 +33,34 @@ class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
         self.schedule_pairing_management_service = schedule_pairing_management_service
         self.schedule_pairing_service = schedule_pairing_service
         self.roadmap_pairing_service = roadmap_pairing_service
+        self.tm = tm
 
     def handle_schedule_share(self, schedule_setup_informations: dict) -> List[ScheduleShare]:
-        try:
+        with self.tm.transaction('') as session:
             route = self.route_place_service.get_route_with_place(list_place_id=schedule_setup_informations['list_place_id'], route_name='')
             list_schedule_shares = self.schedule_management_service.handle_roadmaps_share(schedule_management_id=schedule_setup_informations['scheduleManagement']['id'], schedule_setup_informations=schedule_setup_informations, route=route)
 
             return list_schedule_shares
-        except (Exception, SQLAlchemyError) as e:
-            print(e)
-            raise e
+        
         
     def add_new_request_roadmap(self, validator: dict, roadmap_share_id: int):
-        try:
-            roadmap_request = self.roadmap_request_service.get_roadmap_request_by_roadmap_share_id_and_sender_id(roadmap_share_id=roadmap_share_id, sender_id=validator['sender_id'])
+        with self.tm.transaction('') as session:
+            roadmap_request = self.roadmap_request_service\
+                .get_roadmap_request_by_roadmap_share_id_and_sender_id(roadmap_share_id=roadmap_share_id, sender_id=validator['sender_id'])
             if (roadmap_request):
                 raise Exception("Yêu cầu cho lộ trình này đã được tạo, vui lòng không gửi lại")
             route = self.route_place_service.get_route_with_place(list_place_id=validator['list_place_id'], route_name='')
+            session.flush()
+
             roadmap_request = self.roadmap_request_service.add_new_roadmap_request(validator=validator, route_id=route.route_id, roadmap_share_id=roadmap_share_id)
+            session.flush()
+
             notification = self.notification_service.add_new_notification_request_roadmap_of_user(validator=validator)
             return roadmap_request, notification
-        except SQLAlchemyError as e:
-            raise e
-        except Exception as e:
-            raise e
+        
         
     def handle_update_schedule_share(self, update_schedule_share_validator: dict, schedule_share_id):
-        try:
+        with self.tm.transaction('') as session:
             schedule_share_check = self.schedule_share_service.get_schedule_share_by_departure_date(departure_date=update_schedule_share_validator['departure_date'])
             if (schedule_share_check):
                 raise Exception('Đã tồn tại lịch trình với ngày khởi hành này, vui lòng kiểm tra lại')
@@ -78,11 +83,10 @@ class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
                                 .update_schedule_share({'id': schedule_share_id}, {'departure_date': datetime.fromisoformat(update_schedule_share_validator['departure_date'])})
             
             return schedule_share
-        except Exception as e:
-            raise e
+        
         
     def handle_accept_roadmap_request(self, roadmap_request_id: int, main_user_id: str):
-        try:
+        with self.tm.transaction('') as session:
             roadmap_request = self.roadmap_request_service.get_roadmap_request_by_request_id(roadmap_request_id=roadmap_request_id)
             if (roadmap_request.roadmap_share.schedule_share.schedule_management.user_id != main_user_id):
                 raise Exception('User không có quyền truy cập vào tài nguyên của User khác')
@@ -94,12 +98,17 @@ class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
                                                 .get_schedule_pairing_management_of_user(user_id=main_user_id)
             secondary_schedule_pairing_management = self.schedule_pairing_management_service\
                                                     .get_schedule_pairing_management_of_user(user_id=roadmap_request.sender_id)
+            
+            session.flush()
+
             main_schedule_pairing = self.schedule_pairing_service\
                             .get_or_create_schedule_pairing_by_departure_date_and_schedule_pairing_management_id(departure_date=roadmap_request.roadmap_share.schedule_share.departure_date\
                                                                                                                 , schedule_pairing_management_id=main_schedule_pairing_management.id)
             secondary_schedule_pairing = self.schedule_pairing_service\
                             .get_or_create_schedule_pairing_by_departure_date_and_schedule_pairing_management_id(departure_date=roadmap_request.roadmap_share.schedule_share.departure_date\
                                                                                                                  , schedule_pairing_management_id=secondary_schedule_pairing_management.id)
+            session.flush()
+
             roadmap_pairing = self.roadmap_pairing_service\
                 .create_roadmap_pairing(data={'roadmap_request_id': roadmap_request_id})
             main_schedule_pairing.list_roadmap_pairings.append(roadmap_pairing)
@@ -112,21 +121,16 @@ class ScheduleManagementShareRoute(IScheduleManagementShareRoute):
             #Khúc này sẽ tạo các notification cho các user bị declined rồi phát cho họ (tính sau)
             roadmap_requests_of_roadmap_share = self.roadmap_request_service.get_roadmaps_request_by_roadmap_share_id(roadmap_share_id=roadmap_request.roadmap_share_id)
             return roadmap_requests_of_roadmap_share, notification_pairing
-        except Exception as e:
-            print(e)
-            raise e
         
     def handle_declined_roadmap_request(self, roadmap_request_id: int, main_user_id: str):
-        try:
+        with self.tm.transaction('') as session:
             roadmap_request = self.roadmap_request_service.get_roadmap_request_by_request_id(roadmap_request_id=roadmap_request_id)
             if (roadmap_request.roadmap_share.schedule_share.schedule_management.user_id != main_user_id):
                 raise Exception('User không có quyền truy cập vào tài nguyên của User khác')
             roadmap_request = self.roadmap_request_service\
                     .update_declined_status_roadmap_request(sender_id=roadmap_request.sender_id, roadmap_request_id=roadmap_request.id)
             return roadmap_request
-        except Exception as e:
-            print(e)
-            raise e
+        
         
             
 

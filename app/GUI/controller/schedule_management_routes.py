@@ -1,20 +1,32 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
-from app.Container.InstanceContainer import schedule_management_service\
-                                    , schedule_management_schema, schedule_share_item_schema, roadmap_share_service\
-                                    , roadmap_share_schema, create_roadmap_request_validator, roadmap_request_service\
-                                    , roadmap_request_schema, notification_schema, update_schedule_management_schema, schedule_management_share_route\
-                                    , update_schedule_share_schema           
+from app.Container.InstanceContainer import \
+                                     schedule_management_schema, schedule_share_item_schema\
+                                    , roadmap_share_schema, create_roadmap_request_validator\
+                                    , roadmap_request_schema, notification_schema, update_schedule_management_schema\
+                                    , update_schedule_share_schema   
+
+from app.BLL.Interfaces.IScheduleManagementShareRoute import IScheduleManagementShareRoute   
+from app.BLL.Interfaces.IScheduleManagementService import IScheduleManagementService
+from app.BLL.Interfaces.IRoadmapShareService import IRoadmapShareService
+from app.BLL.Interfaces.IRoadmapRequestService import IRoadmapRequestService
+from app.Container.InstanceContainer import injector     
 from app.BLL.Redis.utils.redis_utils import redis_client
 from app.decorator.decorator import middleware_auth
 from firebase_admin import auth
 import simplejson
 
-from app.BLL.Services.ScheduleManagementShareRoute import ScheduleManagementShareRoute
 
 
 schedule_management_bp = Blueprint('schedule_management', __name__)
+
+schedule_management_share_route = injector.get(interface=IScheduleManagementShareRoute)
+schedule_management_service = injector.get(interface=IScheduleManagementService)
+roadmap_share_service = injector.get(interface=IRoadmapShareService)
+roadmap_request_service = injector.get(interface=IRoadmapRequestService)
+
+
 
 @schedule_management_bp.route('/api/v1/schedule-managements/users/<user_id>', methods=['GET'])
 def get_all_schedule_managements_of_user(user_id):

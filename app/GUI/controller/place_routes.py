@@ -1,6 +1,8 @@
 from flask import request, jsonify, Blueprint
 import requests
-from app.Container.InstanceContainer import place_service, place_schema
+from app.Container.InstanceContainer import place_schema
+from app.Container.InstanceContainer import injector
+from app.BLL.Interfaces.IPlaceService import IPlaceService
 from app.GUI.model.models import Place, Location
 from app.API.Goong.GoongAPI import get_place_detail, get_mutiples_place_detail, get_direction_goong
 from app.API.ORS.ORSAPI import get_direction_ORS
@@ -12,7 +14,7 @@ place_route_bp = Blueprint('place', __name__)
 
 url_openroute_direction = 'https://api.openrouteservice.org/v2/directions/driving-car/geojson'
 
-
+place_service = injector.get(interface=IPlaceService)
 
 
 @place_route_bp.route('/api/v1/place/find/<place_id>', methods=['GET'])

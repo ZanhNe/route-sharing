@@ -1,9 +1,13 @@
 from flask import Blueprint, jsonify, request
 from app.GUI.model.models import Roles
-from app.Container.InstanceContainer import role_service, role_schema
+from app.Container.InstanceContainer import role_schema
+from app.Container.InstanceContainer import injector
+from app.BLL.Interfaces.IRoleService import IRoleService
+
 
 
 role_bp = Blueprint('role', __name__)
+role_service = injector.get(interface=IRoleService)
 
 @role_bp.route('/api/v1/roles', methods=['GET'])
 def get_roles_all():

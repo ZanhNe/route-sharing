@@ -7,48 +7,53 @@ from app.DAL.Interfaces.IScheduleShareRepository import IScheduleShareRepository
 from app.DAL.Interfaces.IRoadmapShareRepository import IRoadmapShareRepository
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from app.custom.Helper.Helper import TransactionManager
+from injector import inject
 
 class ScheduleManagementService(IScheduleManagementService):
-    def __init__(self, schedule_management_repo: IScheduleManagementRepository, schedule_share_repo: IScheduleShareRepository):
+    @inject
+    def __init__(self, schedule_management_repo: IScheduleManagementRepository, schedule_share_repo: IScheduleShareRepository, tm: TransactionManager):
         self.schedule_management_repo = schedule_management_repo
         self.schedule_share_repo = schedule_share_repo
+        self.tm = tm
         
 
-    def get_all_schedule_management(self, session: Session):
-        return self.schedule_management_repo.get_all_schedule_management(session=session)
+    def get_all_schedule_management(self):
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_all_schedule_management(session=session)
     
-    def get_schedule_management_by_schedule_management_id(self, session: Session, schedule_management_id: int) -> ScheduleManagement:
-        return self.schedule_management_repo.get_schedule_management_by_schedule_management_id(session=session, schedule_management_id=schedule_management_id)
+    def get_schedule_management_by_schedule_management_id(self, schedule_management_id: int) -> ScheduleManagement:
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_schedule_management_by_schedule_management_id(session=session, schedule_management_id=schedule_management_id)
 
-    def get_all_schedule_management_by_user_id(self, session: Session, user_id: int) -> List[ScheduleManagement]:
-        return self.schedule_management_repo.get_all_schedule_management_by_user_id(session=session, user_id=user_id)
+    def get_all_schedule_management_by_user_id(self, user_id: int) -> List[ScheduleManagement]:
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_all_schedule_management_by_user_id(session=session, user_id=user_id)
     
     def get_all_schedule_managements_opening(self, session: Session) -> List[ScheduleManagement]:
-        return self.schedule_management_repo.get_all_schedule_managements_opening(session=session)
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_all_schedule_managements_opening(session=session)
 
-    def get_schedule_management_by_id(self, session: Session, schedule_management_id):
-        return self.schedule_management_repo.get_schedule_management_by_id(session=session, schedule_management_id=schedule_management_id)
+    def get_schedule_management_by_id(self, schedule_management_id):
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_schedule_management_by_id(session=session, schedule_management_id=schedule_management_id)
     
-    def get_some_schedule_management_by_ids(self, session: Session, list_schedule_management_id):
-        return self.schedule_management_repo.get_some_schedule_management_by_ids(session=session, list_schedule_management_id=list_schedule_management_id)
+    def get_some_schedule_management_by_ids(self, list_schedule_management_id):
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_some_schedule_management_by_ids(session=session, list_schedule_management_id=list_schedule_management_id)
     
-    def create_schedule_management(self, session: Session, schedule_management: ScheduleManagement):
-        return self.schedule_management_repo.create_schedule_management(session=session, schedule_management=schedule_management)
+    def create_schedule_management(self, schedule_management: ScheduleManagement):
+        with self.tm.transaction('Lỗi khi tạo schedule management') as session:
+            return self.schedule_management_repo.create_schedule_management(session=session, schedule_management=schedule_management)
     
-    def update_schedule_management(self, session: Session, schedule_management_id: int, data: dict):
-        try:
+    def update_schedule_management(self, schedule_management_id: int, data: dict):
+        with self.tm.transaction('Lỗi khi cập nhật schedule management') as session:
             schedule_management = self.schedule_management_repo.update_schedule_management(session=session, schedule_management_id=schedule_management_id, data=data)
-            session.commit()
             return schedule_management
-        except SQLAlchemyError as e:
-            print(e)
-            session.rollback()
-            raise Exception('Lỗi khi cập nhật schedule management')
-        finally:
-            session.close()
+        
 
-    def handle_roadmaps_share(self, session: Session, schedule_management_id: int, schedule_setup_informations: dict, route: Route) -> List[ScheduleShare]:
-        try:
+    def handle_roadmaps_share(self, schedule_management_id: int, schedule_setup_informations: dict, route: Route) -> List[ScheduleShare]:
+        with self.tm.transaction('Lỗi khi xử lý schedule management') as session:
             list_schedules_share = []
             for schedule in schedule_setup_informations['schedules']:
                 schedule_share = self.schedule_share_repo.get_schedule_share_by_departure_date_with_roadmap_open(session=session, departure_date=schedule['date'])
@@ -68,11 +73,5 @@ class ScheduleManagementService(IScheduleManagementService):
                 schedule_share = self.schedule_share_repo.add_roadmaps_share_to_schedule_share(session=session, schedule_share=schedule_share, list_roadmap=list_roadmaps)
                 session.flush()
                 list_schedules_share.append(schedule_share)
-            session.commit()
             return list_schedules_share
-        except (Exception, SQLAlchemyError) as e:
-            print(e)
-            session.rollback()
-            raise e
-        finally: 
-            session.close()
+        

@@ -26,6 +26,6 @@ class IUserService(ABC):
     def update_user(self, session: Session, user: User) -> User:
         pass
 
-    @abstractmethod
-    def update_status_user(self, session: Session, new_status: str, user: User) -> User:
-        pass
+    # @abstractmethod
+    # def update_status_user(self, session: Session, new_status: str, user: User) -> User:
+    #     pass

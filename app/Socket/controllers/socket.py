@@ -3,12 +3,13 @@ import simplejson
 from flask_socketio import SocketIO
 from flask import request
 from app.GUI.model.models import Message
-from app.Container.InstanceContainer import conversation_service, message_schema
+from app.Container.InstanceContainer import injector, message_schema
+from app.BLL.Interfaces.IConversationService import IConversationService
 from flask_socketio import join_room
 
 
 socketio = SocketIO(json=simplejson, async_mode='gevent')
-
+conversation_service = injector.get(interface=IConversationService)
 
 def register_socketio_events(socketio: SocketIO):
     @socketio.on('connect')

@@ -1,12 +1,14 @@
 from flask import Blueprint, jsonify, request
 from app.GUI.model.models import Conversation
-from app.Container.InstanceContainer import conversation_service, conversation_schema, message_schema
+from app.Container.InstanceContainer import injector, conversation_schema, message_schema
+from app.BLL.Interfaces.IConversationService import IConversationService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room
 from app.BLL.Redis.utils.redis_utils import redis_client
 from app.Socket.controllers.socket import socketio
 
 conversation_route_bp = Blueprint('conversation', __name__)
+conversation_service = injector.get(interface=IConversationService)
 
 
 @conversation_route_bp.route('/api/v1/user/conversation', methods=['POST'])

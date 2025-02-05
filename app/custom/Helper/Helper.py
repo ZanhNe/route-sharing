@@ -7,20 +7,24 @@ class TransactionManager:
         self.session = session
     
     @contextmanager
-    def transaction(self):
-        transaction_active = self.session.in_transaction()
+    def transaction(self, error_message: str):
+        session = self.session()
+        transaction_active = session.in_transaction()
+
+        print(transaction_active)
 
         if not transaction_active:
-            self.session.begin()
+            session.begin()
         try:
-            yield self.session
+            yield session
             if not transaction_active:
-                self.session.commit()
-        except SQLAlchemyError as e:
-            print(e)
+                session.commit()
+        except (SQLAlchemyError, Exception) as e:
+            print(e)    
             if not transaction_active:
-                self.session.rollback()
-            raise Exception('Lỗi thực thi DB')
-        finally:
-            if not transaction_active:
-                self.session.close()
+                session.rollback()
+            if isinstance(e, Exception):
+                raise e
+            elif isinstance(e, SQLAlchemyError):
+                raise Exception(error_message)
+        
