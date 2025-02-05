@@ -72,7 +72,7 @@ from app.BLL.Services.RoadmapPairingService import RoadmapPairingService
 
 
 from app.lib.lib_ma import UserSchema, RoleSchema, LocationSchema, RouteSchema, PlaceSchema, NotificationSchema, \
-                            ConversationSchema, MessageSchema, ScheduleManagementSchema, RoadmapShareSchema, ScheduleShareItemSchema, \
+                            ConversationSchema, MessageSchema, ScheduleManagementSchema, RoadmapShareSchema, ScheduleShareItemSchema,\
                             CreateRoadmapRequestValidator, RoadmapRequestSchema, UpdateScheduleManagementValidator \
                             , UpdateScheduleShareValidator
 

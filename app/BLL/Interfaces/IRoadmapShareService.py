@@ -17,7 +17,7 @@ class IRoadmapShareService(ABC):
         pass
 
     @abstractmethod
-    def get_roadmap_share_by_schedule_share_id_is_open(self, schedule_share_id) -> RoadmapShare:
+    def get_roadmaps_share_by_schedule_share_id_is_open(self, schedule_share_id) -> List[RoadmapShare]:
         pass
  
     @abstractmethod

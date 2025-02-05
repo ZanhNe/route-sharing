@@ -10,11 +10,11 @@ class IScheduleShareRepository(ABC):
         pass
 
     @abstractmethod
-    def get_schedule_share_by_departure_date(self, session: Session, departure_date) -> ScheduleShare:
+    def get_schedule_share_by_departure_date(self, session: Session, departure_date, schedule_management_id: int) -> ScheduleShare:
         pass
 
     @abstractmethod
-    def get_schedule_share_by_departure_date_with_roadmap_open(self, session: Session, departure_date) -> ScheduleShare:
+    def get_schedule_share_by_departure_date_with_roadmap_open(self, session: Session, departure_date, schedule_management_id: int) -> ScheduleShare:
         pass
 
     @abstractmethod

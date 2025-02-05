@@ -69,13 +69,17 @@ def get_all_schedule_managements_opening():
     return schedule_management_schema.jsonify(obj=schedule_managements, many=True), 200
 
 @schedule_management_bp.route('/api/v1/schedule-managements/<int:schedule_management_id>', methods=['PUT'])
+@middleware_auth
 def set_open_status_schedule_management(schedule_management_id):
     try:
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decode_token = auth.verify_id_token(id_token=id_token)
+        user_id = decode_token['user_id']
         json_data = request.get_json()
         update_schedule_management_validator = update_schedule_management_schema.load(json_data)
-        schedule_management = schedule_management_service.update_schedule_management(schedule_management_id=schedule_management_id, data=update_schedule_management_validator)
+        schedule_management = schedule_management_service.update_schedule_management(user_id=user_id, schedule_management_id=schedule_management_id, data=update_schedule_management_validator)
         schedule_management_json = schedule_management_schema.dump(obj=schedule_management)
-        object_payload = simplejson.dumps(obj={'payload': schedule_management_json, 'include_self': False})
+        object_payload = simplejson.dumps(obj={'payload': schedule_management_json, 'skip_sid': user_id})
         redis_client.publish('schedule_managements.update', object_payload)
         return schedule_management_schema.jsonify(obj=schedule_management), 200
     except Exception as e:
@@ -120,8 +124,8 @@ def handle_request_roadmap_share(schedule_share_id, roadmap_share_id):
         roadmap_request_json = roadmap_request_schema.dump(obj=roadmap_request)
         notification_json = notification_schema.dump(obj=notification)
 
-        roadmap_request_payload = simplejson.dumps(obj={'payload': roadmap_request_json, 'send_to': validator['receiver_id'], 'include_self': False})
-        notification_payload = simplejson.dumps(obj={'payload': notification_json, 'send_to': validator['receiver_id'], 'include_self': False})
+        roadmap_request_payload = simplejson.dumps(obj={'payload': roadmap_request_json, 'send_to': validator['receiver_id'], 'skip_sid': validator['sender_id']})
+        notification_payload = simplejson.dumps(obj={'payload': notification_json, 'send_to': validator['receiver_id'], 'skip_sid': validator['sender_id']})
         
         redis_client.publish('roadmap_request.update', roadmap_request_payload)
         redis_client.publish('notification.update', notification_payload)
@@ -160,7 +164,7 @@ def accept_roadmap_request(roadmap_share_id, roadmap_request_id):
         roadmap_requests_of_roadmap_share, notification_pairing = schedule_management_share_route\
                                                                     .handle_accept_roadmap_request(roadmap_request_id, main_user_id)
         notification_pairing_json = notification_schema.dump(obj=notification_pairing)
-        noti_payloads = simplejson.dumps(obj={'payload': notification_pairing_json, 'include_self': False, 'send_to': notification_pairing.main_user_id})
+        noti_payloads = simplejson.dumps(obj={'payload': notification_pairing_json, 'include_self': False, 'send_to': notification_pairing.main_user_id, 'skip_sid': main_user_id})
         redis_client.publish('notification.update', noti_payloads)
         return roadmap_request_schema.jsonify(obj=roadmap_requests_of_roadmap_share, many=True), 200
     except Exception as e:

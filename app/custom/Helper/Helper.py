@@ -28,3 +28,4 @@ class TransactionManager:
             elif isinstance(e, SQLAlchemyError):
                 raise Exception(error_message)
         
+        

@@ -21,7 +21,7 @@ class IScheduleManagementService(ABC):
         pass
 
     @abstractmethod
-    def update_schedule_management(self, schedule_management_id: int, data: dict):
+    def update_schedule_management(self, user_id, schedule_management_id: int, data: dict):
         pass
     
     @abstractmethod

@@ -30,7 +30,7 @@ class ScheduleManagementService(IScheduleManagementService):
         with self.tm.transaction('') as session:
             return self.schedule_management_repo.get_all_schedule_management_by_user_id(session=session, user_id=user_id)
     
-    def get_all_schedule_managements_opening(self, session: Session) -> List[ScheduleManagement]:
+    def get_all_schedule_managements_opening(self) -> List[ScheduleManagement]:
         with self.tm.transaction('') as session:
             return self.schedule_management_repo.get_all_schedule_managements_opening(session=session)
 
@@ -46,8 +46,13 @@ class ScheduleManagementService(IScheduleManagementService):
         with self.tm.transaction('Lỗi khi tạo schedule management') as session:
             return self.schedule_management_repo.create_schedule_management(session=session, schedule_management=schedule_management)
     
-    def update_schedule_management(self, schedule_management_id: int, data: dict):
+    def update_schedule_management(self, user_id, schedule_management_id: int, data: dict):
         with self.tm.transaction('Lỗi khi cập nhật schedule management') as session:
+            schedule_management = self.schedule_management_repo.get_schedule_management_by_id(session=session, schedule_management_id=schedule_management_id)
+            if not schedule_management: 
+                raise Exception('Quản lý lịch trình không tồn tại')
+            if (user_id != schedule_management.user_id):
+                raise Exception('Bạn không có quyền truy cập vào danh sách của người khác')
             schedule_management = self.schedule_management_repo.update_schedule_management(session=session, schedule_management_id=schedule_management_id, data=data)
             return schedule_management
         
@@ -56,13 +61,16 @@ class ScheduleManagementService(IScheduleManagementService):
         with self.tm.transaction('Lỗi khi xử lý schedule management') as session:
             list_schedules_share = []
             for schedule in schedule_setup_informations['schedules']:
-                schedule_share = self.schedule_share_repo.get_schedule_share_by_departure_date_with_roadmap_open(session=session, departure_date=schedule['date'])
+                departure_date_format = datetime.fromisoformat(schedule['date'].split('+')[0])
+                schedule_share = self.schedule_share_repo\
+                    .get_schedule_share_by_departure_date_with_roadmap_open(session=session, departure_date=departure_date_format\
+                                                                            , schedule_management_id=schedule_management_id)
                 if (not schedule_share):
                     schedule_share = ScheduleShare(departure_date=datetime.fromisoformat(schedule['date']), schedule_management_id=schedule_management_id)
                     schedule_share = self.schedule_share_repo.create_schedule_share(session=session, schedule_share=schedule_share)
                     session.flush()
                 schedule_share.logAllRoadmaps()
-                if (not schedule_share.checkValidRoadmapFromAnotherTime(schedule['times'][0]['departureTime'])):
+                if (not schedule_share.checkValidRoadmapFromAnotherTime(schedule['times'][0]['departureTime'].split('+')[0])):
                     raise Exception(f'Thời gian bắt đầu của lộ trình mới phải sau thời gian kết thúc của lộ trình ngày: {schedule_share.departure_date}')
                 list_roadmaps = []
                 for times in schedule['times']:

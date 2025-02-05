@@ -33,7 +33,7 @@ class UserService(IUserService):
 
     def add_user(self, user: User) -> User:
         with self.tm.transaction('Lỗi khi thêm user') as session:
-            user_role = self.role_repository.get_role_by_name(role_name="USER")
+            user_role = self.role_repository.get_role_by_name(session=session, role_name="USER")
             user.roles.append(user_role)
             user = self.user_repository.add_user(session=session, user=user)
             return user

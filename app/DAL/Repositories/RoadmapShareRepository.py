@@ -13,7 +13,7 @@ class RoadmapShareRepository(IRoadmapShareRepository):
     def get_roadmap_share_by_schedule_share_id(self, session: Session,schedule_share_id):
         return session.query(RoadmapShare).filter(RoadmapShare.schedule_share_id == schedule_share_id).order_by(RoadmapShare.estimated_departure_time.asc()).first()
     
-    def get_roadmap_share_by_schedule_share_id_is_open(self, session: Session,schedule_share_id):
+    def get_roadmaps_share_by_schedule_share_id_is_open(self, session: Session,schedule_share_id):
         return session.query(RoadmapShare).filter(RoadmapShare.schedule_share_id == schedule_share_id, RoadmapShare.is_open == True).order_by(RoadmapShare.estimated_departure_time.desc()).all()
 
     def get_roadmap_share_by_id(self, session: Session,roadmap_share_id):

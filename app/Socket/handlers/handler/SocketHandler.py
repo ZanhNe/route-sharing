@@ -14,39 +14,39 @@ class SocketHandler(ISocketHandler):
             'join_private_conversation': None
         }
     
-    def routes_share_socket_handler(self, data, to: str = None, include_self: bool = True):
+    def routes_share_socket_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
-            self.socketio.emit('routes_share.update', data, include_self=include_self)
+            self.socketio.emit('routes_share.update', data, skip_sid=skip_sid)
         else:
-            self.socketio.emit('routes_share.update', data, to=to, include_self=False)
+            self.socketio.emit('routes_share.update', data, to=to, skip_sid=skip_sid)
 
-    def request_route_socket_handler(self, data, to: str = None, include_self: bool = True):
+    def request_route_socket_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
-            self.socketio.emit('request_route.update', data, include_self=include_self)
+            self.socketio.emit('request_route.update', data, skip_sid=skip_sid)
         else:
-            self.socketio.emit('request_route.update', data, to=to, include_self=False)
+            self.socketio.emit('request_route.update', data, to=to, skip_sid=skip_sid)
 
-    def notification_socket_handler(self, data, to: str = None, include_self: bool = True):
+    def notification_socket_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
-            self.socketio.emit('notification.update', data, include_self=include_self)
+            self.socketio.emit('notification.update', data, skip_sid=skip_sid)
         else:
-            self.socketio.emit('notification.update', data, to=to, include_self=False)
+            self.socketio.emit('notification.update', data, to=to, skip_sid=skip_sid)
 
-    def user_socket_handler(self, data, to: str = None, include_self: bool = True):
+    def user_socket_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
-            self.socketio.emit('user.update', data, include_self=include_self)
+            self.socketio.emit('user.update', data, skip_sid=skip_sid)
         else:
-            self.socketio.emit('user.update', data, to=to, include_self=False)      
+            self.socketio.emit('user.update', data, to=to, skip_sid=skip_sid)      
 
-    def schedule_managements_handler(self, data, to: str = None, include_self: bool = True):
+    def schedule_managements_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
-            self.socketio.emit('schedule_managements.update', data, include_self=include_self)
+            self.socketio.emit('schedule_managements.update', data, skip_sid=skip_sid)
         else:
-            self.socketio.emit('schedule_managements.update', data, to=to, include_self=False)
+            self.socketio.emit('schedule_managements.update', data, to=to, skip_sid=skip_sid)
     
-    def roadmap_request_handler(self, data, to: str = None, include_self: bool = True):
+    def roadmap_request_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
-            self.socketio.emit('roadmap_request.update', data, include_self=include_self)
+            self.socketio.emit('roadmap_request.update', data, skip_sid=skip_sid)
         else:
-            self.socketio.emit('roadmap_request.update', data, to=to)
+            self.socketio.emit('roadmap_request.update', data, to=to, skip_sid=skip_sid)
         
