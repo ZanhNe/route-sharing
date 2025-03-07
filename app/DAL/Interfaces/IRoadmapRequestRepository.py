@@ -31,6 +31,10 @@ class IRoadmapRequestRepository(ABC):
         pass
 
     @abstractmethod
+    def update_cancel_status_roadmap_request(self, session: Session, roadmap_request_id) -> RoadmapRequest:
+        pass
+
+    @abstractmethod
     def create_roadmap_request(self, session: Session, roadmap_request: RoadmapRequest) -> RoadmapRequest:
         pass
 

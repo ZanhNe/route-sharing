@@ -14,6 +14,10 @@ class ISchedulePairingRepository(ABC):
         pass
 
     @abstractmethod
+    def get_schedule_pairing_by_schedule_pairing_id(self, session: Session, schedule_pairing_id: int) -> SchedulePairing:
+        pass
+
+    @abstractmethod
     def create_schedule_pairing(self, session: Session, schedule_pairing: SchedulePairing) -> SchedulePairing:
         pass
 

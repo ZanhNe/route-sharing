@@ -37,6 +37,10 @@ class RoadmapRequestService(IRoadmapRequestService):
         with self.tm.transaction('Lỗi khi update trạng thái decline cho roadmap request') as session:
             return self.roadmap_request_repository.update_declined_status_roadmap_request(session=session, sender_id=sender_id, roadmap_request_id=roadmap_request_id)
     
+    def update_cancel_status_roadmap_request(self, session: Session, roadmap_request_id) -> RoadmapRequest:
+        with self.tm.transaction('Lỗi khi updae trạng thái của roadmap request') as session:
+            return self.roadmap_request_repository.update_cancel_status_roadmap_request(session=session, roadmap_request_id=roadmap_request_id)
+
 
     def add_new_roadmap_request(self, validator: dict, route_id: int, roadmap_share_id: int):
         with self.tm.transaction('Lỗi khi thêm roadmap request') as session:

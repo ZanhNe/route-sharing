@@ -11,13 +11,14 @@ class TransactionManager:
         session = self.session()
         transaction_active = session.in_transaction()
 
-        print(transaction_active)
+        print('Này test thử transaction: ', transaction_active)
 
         if not transaction_active:
             session.begin()
         try:
             yield session
             if not transaction_active:
+                print('Này đã commit rồi nha')
                 session.commit()
         except (SQLAlchemyError, Exception) as e:
             print(e)    

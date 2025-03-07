@@ -30,6 +30,10 @@ class IScheduleShareRepository(ABC):
         pass
 
     @abstractmethod
+    def update_schedules_share_lt(self, session: Session, conditions: dict, data):
+        pass
+
+    @abstractmethod
     def create_schedule_share(self, session: Session, schedule_share) -> ScheduleShare:
         pass
 

@@ -22,6 +22,10 @@ class ScheduleManagementService(IScheduleManagementService):
         with self.tm.transaction('') as session:
             return self.schedule_management_repo.get_all_schedule_management(session=session)
     
+    def get_schedule_management_by_title_and_user_id(self, schedule_management_title: str, user_id: str) -> List[ScheduleManagement]:
+        with self.tm.transaction('') as session:
+            return self.schedule_management_repo.get_schedule_management_by_title_and_user_id(session=session, schedule_management_title=schedule_management_title, user_id=user_id)
+
     def get_schedule_management_by_schedule_management_id(self, schedule_management_id: int) -> ScheduleManagement:
         with self.tm.transaction('') as session:
             return self.schedule_management_repo.get_schedule_management_by_schedule_management_id(session=session, schedule_management_id=schedule_management_id)
@@ -63,7 +67,7 @@ class ScheduleManagementService(IScheduleManagementService):
             for schedule in schedule_setup_informations['schedules']:
                 departure_date_format = datetime.fromisoformat(schedule['date'].split('+')[0])
                 schedule_share = self.schedule_share_repo\
-                    .get_schedule_share_by_departure_date_with_roadmap_open(session=session, departure_date=departure_date_format\
+                    .get_schedule_share_by_departure_date(session=session, departure_date=departure_date_format\
                                                                             , schedule_management_id=schedule_management_id)
                 if (not schedule_share):
                     schedule_share = ScheduleShare(departure_date=datetime.fromisoformat(schedule['date']), schedule_management_id=schedule_management_id)
@@ -71,7 +75,7 @@ class ScheduleManagementService(IScheduleManagementService):
                     session.flush()
                 schedule_share.logAllRoadmaps()
                 if (not schedule_share.checkValidRoadmapFromAnotherTime(schedule['times'][0]['departureTime'].split('+')[0])):
-                    raise Exception(f'Thời gian bắt đầu của lộ trình mới phải sau thời gian kết thúc của lộ trình ngày: {schedule_share.departure_date}')
+                    raise Exception(f'Thời gian bắt đầu của lộ trình mới phải sau thời gian kết thúc của lộ trình ngày: {schedule_share.list_roadmaps[-1].estimated_arrival_time}')
                 list_roadmaps = []
                 for times in schedule['times']:
                     roadmap_share = RoadmapShare(estimated_departure_time=datetime.fromisoformat(times['departureTime'])\

@@ -21,6 +21,10 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
-    def update_user(self, session: Session, user: User) -> User:
+    def update_user(self, session: Session, user_id: str, payloads: dict) -> User:
+        pass
+
+    @abstractmethod
+    def delete_user(self, session: Session, user_id):
         pass
     

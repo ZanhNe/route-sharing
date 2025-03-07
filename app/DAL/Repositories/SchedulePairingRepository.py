@@ -12,6 +12,8 @@ class SchedulePairingRepository(ISchedulePairingRepository):
     def get_schedule_pairing_by_departure_date_and_schedule_pairing_management_id(self, session: Session, departure_date, schedule_pairing_management_id):
         return session.query(SchedulePairing).filter(SchedulePairing.departure_date == departure_date, SchedulePairing.schedule_pairing_management_id == schedule_pairing_management_id).first()
 
+    def get_schedule_pairing_by_schedule_pairing_id(self, session, schedule_pairing_id):
+        return session.query(SchedulePairing).get(ident=schedule_pairing_id)
 
     def create_schedule_pairing(self, session: Session, schedule_pairing):
         session.add(instance=schedule_pairing)

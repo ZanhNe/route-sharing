@@ -37,6 +37,8 @@ class IConversationService(ABC):
     @abstractmethod
     def add_message_to_conversation(self, conversation: Conversation, sender_id: str, content: str) -> Message:
         pass
-    # @abstractmethod
-    # def get_conversation_from_two_user(self, first_user_id: int, second_user_id: int) -> Conversation:
-    #     pass
+
+    @abstractmethod
+    def update_last_viewed_participant(self, user_id: str, conversation_id: int):
+        pass
+    

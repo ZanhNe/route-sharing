@@ -23,3 +23,11 @@ class IRoadmapShareService(ABC):
     @abstractmethod
     def create_roadmap_share(self, roadmap_share) -> RoadmapShare:
         pass
+
+    @abstractmethod
+    def update_roadmap_share(self, roadmap_share_id: int, data_update: dict) -> RoadmapShare:
+        pass
+
+    @abstractmethod
+    def check_outdate_roadmaps_share(self):
+        pass

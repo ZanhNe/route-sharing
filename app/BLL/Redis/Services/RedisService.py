@@ -1,5 +1,5 @@
 from flask import Flask
-from app import app
+from app import flask_app as app
 from app.BLL.Redis.Interfaces.IRedisService import IRedisService
 from app.Socket.handlers.Interfaces.ISocketHandler import ISocketHandler
 from typing import List

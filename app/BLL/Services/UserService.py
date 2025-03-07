@@ -23,7 +23,7 @@ class UserService(IUserService):
         with self.tm.transaction('Lỗi khi lấy ra user') as session:
             return self.user_repository.get_user_by_id(session=session, user_id=user_id)
     
-    def get_user_by_account(self, session: Session, user_account: str) -> User:
+    def get_user_by_account(self, user_account: str) -> User:
         with self.tm.transaction('') as session:
             result = self.user_repository.get_user_by_account(session=session, user_account=user_account)
             if (not result):
@@ -38,8 +38,13 @@ class UserService(IUserService):
             user = self.user_repository.add_user(session=session, user=user)
             return user
     
-    def update_user(self, user):
+    def update_user(self, user_id, payloads: dict):
         with self.tm.transaction('Lỗi khi cập nhật user') as session:
-            user = self.user_repository.update_user(session=session, user=user)
+            user = self.user_repository.update_user(session=session, user_id=user_id, payloads=payloads)
             return user
+        
+    def delete_user(self, user_id):
+        with self.tm.transaction('Lỗi khi xóa user') as session:
+            self.user_repository.delete_user(session=session, user_id=user_id)
+
         

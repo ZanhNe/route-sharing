@@ -21,9 +21,12 @@ class UserRepository(IUserRepository):
         return user
     
         
-    def update_user(self, session: Session, user: User) -> User:
-        session.add(instance=user)
-        return user
+    def update_user(self, session: Session, user_id: str, payloads: dict) -> User:
+        session.query(User).filter(User.user_id == user_id).update(values=payloads)
+        return session.query(User).get(ident=user_id)
+    
+    def delete_user(self, session: Session, user_id):
+        session.query(User).filter(User.user_id == user_id).delete()
 
         
 

@@ -5,6 +5,7 @@ from app.DAL.Interfaces.IScheduleShareRepository import IScheduleShareRepository
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.custom.Helper.Helper import TransactionManager
+from datetime import datetime
 from injector import inject
 
 
@@ -35,6 +36,13 @@ class ScheduleShareService(IScheduleShareService):
         with self.tm.transaction('') as session:
             return self.schedule_share_repository.get_schedule_share_by_departure_date(session=session, departure_date=departure_date)
     
+    def check_outdate_schedule(self):
+        with self.tm.transaction('Lỗi khi kiểm tra outdate các lịch trình') as session:
+            now = datetime.now()
+            schedules_share = self.schedule_share_repository.\
+                update_schedules_share_lt(session=session, conditions={'departure_date': now}, data={'is_open': False})
+            
+
     
     
 

@@ -1,11 +1,15 @@
+from app.extentions.extentions import ma
 from app.GUI.model.models import Participant, Conversation, Message, User, Roles, Location, Route, Place,\
                                  Notification, ScheduleManagement, ScheduleShare, RoadmapShare, RoadmapRequest, SchedulePairingManagement, \
-                                 SchedulePairing, RoadmapPairing
+                                 SchedulePairing, RoadmapPairing, RoadmapPairingRequest
 from marshmallow import fields, validates, ValidationError, post_dump, validate
-from flask_marshmallow import Marshmallow
+# from flask_marshmallow import Marshmallow
 import simplejson
 
-ma = Marshmallow()
+
+
+class LinkNotificationValidator(ma.Schema):
+    url = fields.Str(required=True, validate=validate.Length(min=21), error_messages={'required': 'Vui lòng điền đủ đường dẫn URL, tối thiểu 21 kí tự'})
 
 class RoleSchema(ma.SQLAlchemyAutoSchema):
     users = ma.Nested('UserSchema', many=True, exclude=('roles',))
@@ -202,7 +206,7 @@ class RoadmapRequestSchema(ma.SQLAlchemyAutoSchema):
 
 class SchedulePairingManagementSchema(ma.SQLAlchemyAutoSchema):
     user = ma.Nested('UserSchema', only=('user_id', 'user_name', 'avatar',))
-    list_schedule_pairings = ma.Nested('SchedulePairingSchema', exclude=('schedule_pairing_management',))
+    list_schedule_pairings = ma.Nested('SchedulePairingItemSchema', many=True)
     class Meta:
         model = SchedulePairingManagement
         load_instance = True
@@ -218,9 +222,18 @@ class SchedulePairingManagementSchema(ma.SQLAlchemyAutoSchema):
 #         render_module = simplejson
 #     joined_date = fields.DateTime(format='iso')
 
+class SchedulePairingItemSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = SchedulePairing
+        load_instance = True
+        render_module = simplejson
+        include_fk = True
+    created_date = fields.DateTime(format='iso')
+    departure_date = fields.DateTime(format='iso')
+
 class SchedulePairingSchema(ma.SQLAlchemyAutoSchema):
     schedule_pairing_management = ma.Nested('SchedulePairingManagementSchema', exclude=('list_schedule_pairings',))
-    list_roadmap_pairings = ma.Nested('RoadmapPairingSchema', exclude=('list_schedule_pairings',))
+    list_roadmap_pairings = ma.Nested('RoadmapPairingSchema', many=True, exclude=('list_schedule_pairings',))
     class Meta:
         model = SchedulePairing
         load_instance = True
@@ -230,8 +243,7 @@ class SchedulePairingSchema(ma.SQLAlchemyAutoSchema):
 
 class RoadmapPairingSchema(ma.SQLAlchemyAutoSchema):
     route = ma.Nested('RouteSchema')
-    list_schedule_pairings = ma.Nested('SchedulePairingSchema', many=True, exclude=('list_roadmap_pairings',))
-    list_user_pairings = ma.Nested('UserRoadmapPairingSchema', exclude=('roadmap_pairing',))
+    roadmap_request = ma.Nested('RoadmapRequestSchema')
     class Meta:
         model = RoadmapPairing
         load_instance = True
@@ -240,22 +252,47 @@ class RoadmapPairingSchema(ma.SQLAlchemyAutoSchema):
     actual_departure_time = fields.DateTime(format='iso')
     actual_arrival_time = fields.DateTime(format='iso')
 
-# class ConversationMemberSchema(ma.SQLAlchemyAutoSchema):
-#     conversation = ma.Nested('ConversationSchema', exclude=('members', 'messages',))
-#     member = ma.Nested('UserSchema', only=('user_id', 'user_name', 'avatar'))
-#     class Meta:
-#         model = ConversationMember
-#         load_instance = True
-#         render_module = simplejson
+    @post_dump(pass_many=True)
+    def add_utc_z(self, data, many, **kwargs):
+        if many:
+            for roadmap_pairing in data:
+                roadmap_pairing['created_date'] = f'{roadmap_pairing['created_date']}+07:00'
+                if (roadmap_pairing['actual_departure_time']):
+                    roadmap_pairing['actual_departure_time'] = f'{roadmap_pairing['actual_departure_time']}+07:00'
+                if (roadmap_pairing['actual_arrival_time']):
+                    roadmap_pairing['actual_arrival_time'] = f'{roadmap_pairing['actual_arrival_time']}+07:00'
+        else:
+            data['created_date'] = f'{data['created_date']}+07:00'
+            if (data['actual_departure_time']):
+                data['actual_departure_time'] = f'{data['actual_departure_time']}+07:00'
+            if (data['actual_arrival_time']):
+                data['actual_arrival_time'] = f'{data['actual_arrival_time']}+07:00'
+        return data
+
+class RoadmapPairingRequestSchema(ma.SQLAlchemyAutoSchema):
+    roadmap_pairing = ma.Nested('RoadmapPairingSchema')
+    sender = ma.Nested('UserSchema', only=('user_id', 'user_name', 'avatar',))
+    class Meta:
+        model = RoadmapPairingRequest
+        load_instance = True
+        render_module = simplejson
+    created_date = fields.DateTime(format='iso')
+
+    @post_dump(pass_many=True)
+    def add_utc_z(self, data, many, **kwargs):
+        if many:
+            for roadmap_pairing_request in data:
+                roadmap_pairing_request['created_date'] = f'{roadmap_pairing_request['created_date']}+07:00'
+        else:
+            data['created_date'] = f'{data['created_date']}+07:00'
+        
+        return data
+
+
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
-    # matches = ma.Nested('UserSchema', many=True, exclude=('matches',))
     roles = ma.Nested('RoleSchema', many=True, exclude=('users',))
-    # match_associations = ma.Nested('MatchRouteSchema', many=True, exclude=('main_user',))
-    # routes_share = ma.Nested('UserRouteShareSchema', many=True, exclude=('user',))
     notifications = ma.Nested('NotiSchema', many=True, exclude=('sender', 'receiver',))
-    # request_routes = ma.Nested('RequestRouteSchema', many=True, exclude=('sender', 'receiver',))
-    # match_routes = ma.Nested('MatchRouteSchema', many=True, exclude=('sender', 'receiver'))
     list_schedule_managements = ma.Nested('ScheduleManagementSchema', many=True, exclude=('user',))
     roadmap_requests = ma.Nested('RoadmapRequestSchema', many=True, exclude=('sender',))
     list_roadmap_pairings = ma.Nested('UserRoadmapPairingSchema', many=True, exclude=('user',))
@@ -289,33 +326,6 @@ class NotificationSchema(ma.SQLAlchemyAutoSchema):
 
     
 
-# class RequestRouteSchema(ma.SQLAlchemyAutoSchema):
-#     main_user = ma.Nested(lambda: UserSchema(only=("user_id", "user_name", "avatar")), attribute="main_user")
-#     secondary_user = ma.Nested(lambda: UserSchema(only=("user_id", "user_name", "avatar")), attribute="secondary_user")
-#     route = ma.Nested('RouteSchema')    
-#     class Meta:
-#         model = RequestRoute
-#         render_module = simplejson
-#         load_instance = True
-
-    
-# class MatchRouteSchema(ma.SQLAlchemyAutoSchema):
-#     main_user = ma.Nested(lambda: UserSchema(only=("user_id", "user_name", "avatar")), attribute="main_user")
-#     secondary_user = ma.Nested(lambda: UserSchema(only=("user_id", "user_name", "avatar")), attribute="secondary_user")
-#     route = ma.Nested('RouteSchema', exclude=('matchs',))
-#     class Meta:
-#         model = MatchRoute
-#         render_module = simplejson
-#         load_instance = True
-
-# class UserRouteShareSchema(ma.SQLAlchemyAutoSchema):
-#     user = ma.Nested('UserSchema', only=('user_id', 'user_name', 'avatar'))
-#     route = ma.Nested('RouteSchema')
-#     class Meta:
-#         model = UserRouteShare
-#         render_module = simplejson
-#         load_instance = True
-
 class LocationSchema(ma.SQLAlchemyAutoSchema):
     place = ma.Nested('PlaceSchema', exclude=('location',))
     class Meta:
@@ -324,7 +334,6 @@ class LocationSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True 
 
 class PlaceSchema(ma.SQLAlchemyAutoSchema):
-    # routes = ma.Nested('RouteSchema', many=True, exclude=('places',))
     location = ma.Nested('LocationSchema', exclude=('place',))
     class Meta:
         model = Place
@@ -332,50 +341,10 @@ class PlaceSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
 
 class RouteSchema(ma.SQLAlchemyAutoSchema):
-    # users_share = ma.Nested('UserRouteShareSchema', many=True, exclude=('route',))
     places = ma.Nested('PlaceSchema', many=True)
-    # buses = ma.Nested('BusSchema', many=True, exclude=('route',))
-    # matchs = ma.Nested('MatchRouteSchema', many=True, exclude=('route',))
     class Meta:
         model = Route
         render_module = simplejson
         load_instance = True
     
-# class BusSchema(ma.SQLAlchemyAutoSchema):
-#     route = ma.Nested('RouteSchema')
-#     users = ma.Nested('UserSchema', many=True, exclude=('bus',))
-#     tickets = ma.Nested('TicketSchema', many=True, exclude=('buses',))
-#     class Meta:
-#         model = Bus
-#         render_module = simplejson
-#         load_instance = True
-
-# class TicketSchema(ma.SQLAlchemyAutoSchema):
-#     buses = ma.Nested('BusSchema', many=True, exclude=('tickets',))
-#     users = ma.Nested('UserSchema', many=True, exclude=('tickets',))
-#     class Meta:
-#         model = BusTicket
-#         render_module = simplejson
-#         load_instance = True
-
-# class PaymentSchema(ma.SQLAlchemyAutoSchema):
-#     user = ma.Nested('UserSchema', exclude=('payments',))
-#     class Meta: 
-#         model = Payment
-#         load_instance = True
-
-
-# class PostSchema(ma.SQLAlchemyAutoSchema):
-#     user = ma.Nested('UserSchema', exclude=('posts',))
-#     comments = ma.Nested('CommentSchema', exclude=('post',))
-#     class Meta:
-#         model = Post
-#         load_instance = True
-
-# class CommentSchema(ma.SQLAlchemyAutoSchema):
-#     user = ma.Nested('UserSchema', exclude=('comments',))
-#     # post = ma.Nested('PostSchema', exclude=('comments',))
-#     class Meta:
-#         model = Comment
-#         load_instance = True
 

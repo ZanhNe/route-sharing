@@ -11,5 +11,3 @@ notification_service = injector.get(interface=INotificationService)
 def get_notification_of_user(user_id):
     notifications_user = notification_service.get_all_notifications_of_user(user_id=user_id)
     return notification_schema.jsonify(obj=notifications_user, many=True), 200
-    # pprint.pprint(identity)
-    # return 'Test'

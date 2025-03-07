@@ -1,3 +1,4 @@
+from app.extentions.extentions import socketio
 from app.BLL.Redis.utils.redis_utils import redis_client
 import simplejson
 from flask_socketio import SocketIO
@@ -8,7 +9,6 @@ from app.BLL.Interfaces.IConversationService import IConversationService
 from flask_socketio import join_room
 
 
-socketio = SocketIO(json=simplejson, async_mode='gevent')
 conversation_service = injector.get(interface=IConversationService)
 
 def register_socketio_events(socketio: SocketIO):
@@ -21,10 +21,10 @@ def register_socketio_events(socketio: SocketIO):
         redis_client.set(f'user_sid:{data}', request.sid)
         redis_client.set(f'key_user_sid:{request.sid}', data)
         
-        # conversations = conversation_service.get_conversations_by_user_id(user_id=data)
+        conversations = conversation_service.get_conversations_by_user_id(user_id=data)
 
-        # for conversation in conversations:
-        #     join_room(room=f'private_conversation_{conversation.conversation_id}', sid=request.sid, namespace='/')
+        for conversation in conversations:
+            join_room(room=f'private_conversation_{conversation.conversation_id}', sid=request.sid, namespace='/')
 
         print(f'User login successful with session id: {redis_client.get(f'user_sid:{data}')}')
         print(f'User login successful with user_id: {redis_client.get(f'key_user_sid:{request.sid}')}')
@@ -89,22 +89,5 @@ def register_socketio_events(socketio: SocketIO):
         redis_client.delete(f'user_sid:{redis_client.get(f'key_user_sid:{request.sid}')}')
         redis_client.delete(f'key_user_sid:{request.sid}')
 
-# @socketio.on('connect')
-# def test_connect():
-#     print(f'someone connected to websocket {request.sid}')
-    
 
-# @socketio.on('login success')
-# def handle_success_login(data):
-#     redis_client[f'userId:{data}'] = request.sid 
-#     print(f'User login successful with session id: {request.sid}')
-    
-# @socketio.on('logout')
-# def handle_logout(data):
-#     redis_client.delete(f'userId:{data}')
-#     print(f'User {data} logout: {request.sid}')
-
-# @socketio.on('disconnect')
-# def test_disconnect():
-#     print('someone disconnected')
     

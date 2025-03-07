@@ -53,22 +53,19 @@ class ConversationService(IConversationService):
         with self.tm.transaction('Lỗi khi xử lý private con') as session:
             message = Message(content=content, sender_id=sender_id, conversation_id=conversation.conversation_id)
             conversation.lastest_updated = datetime.now()
+
+            for participant in conversation.participants:
+                if participant.user_id == sender_id:
+                    participant.last_viewed = datetime.now()
+
             return self.conversation_repo.add_message_to_conversation(session=session, message=message)
-            
-    # def get_conversation_from_two_user(self, first_user_id: int, second_user_id: int) -> Conversation:
-    #     conversation_id = Helper.generate_hash_md5(Helper.sorted_combine_id_to_str(first_user_id, second_user_id))
-    #     conversation = self.conversation_repo.get_conversation_by_id(conversation_id=conversation_id)
-
-    #     if (not conversation):
-    #         conversation = Conversation(conversation_id=conversation_id)
-    #         conversation_after_create = self.conversation_repo.create_conversation(conversation=conversation)
-    #         if (not conversation_after_create):
-    #             return None
-    #         first_cv_mem = ConversationMember(conversation_id=conversation_id, user_id=first_user_id)
-    #         second_cv_mem = ConversationMember(conversation_id=conversation_id, user_id=second_user_id)
-
-    #         self.conversation_repo.add_list_members_to_conversation(conversation=conversation_after_create, members=[first_cv_mem, second_cv_mem])
-            
-    #         return conversation_after_create
-    #     return conversation
+    
+    def update_last_viewed_participant(self, user_id: str, conversation_id: int):
+        with self.tm.transaction('') as session:
+            conversation = self.conversation_repo.get_conversation_by_id(session=session, conversation_id=conversation_id)
+            for participant in conversation.participants:
+                if participant.user_id == user_id:
+                    participant.last_viewed = datetime.now()
+        return True
+    
         

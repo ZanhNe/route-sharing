@@ -11,3 +11,13 @@ def test_get_user(id):
     user = user_service.get_user_by_id(session=db.session, user_id=id)
     return user_schema.jsonify(obj=user), 200
 
+
+
+@test_bp.route('/test', methods=['GET'])
+def test():
+    return jsonify(id=1, message='Test thu'), 200
+
+@test_bp.route('/test', methods=['POST'])
+def test2():
+    id = request.get_json().get('id')
+    return jsonify(message='Thanh cong', id=id), 200

@@ -55,7 +55,10 @@ class RoadmapRequestRepository(IRoadmapRequestRepository):
     def update_declined_status_roadmap_request(self, session: Session,sender_id, roadmap_request_id):
         session.query(RoadmapRequest).filter(RoadmapRequest.sender_id == sender_id, RoadmapRequest.id == roadmap_request_id).update({'status': Status.DECLINED})
         return session.query(RoadmapRequest).get(ident=roadmap_request_id)
-        
+    
+    def update_cancel_status_roadmap_request(self, session: Session, roadmap_request_id):
+        session.query(RoadmapRequest).filter(RoadmapRequest.id == roadmap_request_id).update({'status': Status.CANCELLED})
+        return session.query(RoadmapRequest).get(indent=roadmap_request_id)
     
     def get_roadmaps_request_by_sender_id(self, session: Session,sender_id) -> List[RoadmapRequest]:
         return session.query(RoadmapRequest).filter(RoadmapRequest.sender_id == sender_id).order_by(RoadmapRequest.id.desc()).all()

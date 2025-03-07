@@ -10,6 +10,9 @@ class ScheduleManagementRepository(IScheduleManagementRepository):
     def get_schedule_management_by_id(self, session: Session, schedule_management_id: int) -> ScheduleManagement:
         return session.query(ScheduleManagement).get(ident=schedule_management_id)
     
+    def get_schedule_management_by_title_and_user_id(self, session: Session, schedule_management_title: str, user_id: str) -> List[ScheduleManagement]:
+        return session.query(ScheduleManagement).filter(ScheduleManagement.title.like(schedule_management_title), ScheduleManagement.user_id == user_id).all()
+
     def get_schedule_management_by_schedule_management_id(self, session: Session, schedule_management_id: int) -> ScheduleManagement:
         return session.query(ScheduleManagement)\
                     .filter(ScheduleManagement.id == schedule_management_id)\

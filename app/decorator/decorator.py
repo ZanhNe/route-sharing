@@ -7,7 +7,6 @@ def middleware_auth(f):
     def wrapper(*args, **kwargs):
         try:
             id_token = request.headers.get('Authorization').split(' ')[1]
-            print(id_token)
             decode_token = auth.verify_id_token(id_token=id_token, clock_skew_seconds=10)
             return f(*args, **kwargs)
         except auth.ExpiredIdTokenError as e:

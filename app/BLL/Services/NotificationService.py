@@ -23,7 +23,9 @@ class NotificationService(INotificationService):
             notification = Notification(content='Một người muốn ghép cặp lộ trình với bạn', main_user_id=validator['receiver_id'], secondary_user_id=validator['sender_id'])
             return self.notification_repository.add_new_notification_of_user(session=session, notification=notification)
         
-        
+    
+            
+    
     def add_new_notification_status_request(self, validator: dict) -> Notification:
         with self.tm.transaction('Lỗi khi thêm notification cho request status') as session:
             notification = Notification(content=validator['content'], main_user_id=validator['receiver_id'], secondary_user_id=validator['sender_id'])

@@ -21,6 +21,10 @@ class IRoadmapRequestService(ABC):
         pass
 
     @abstractmethod
+    def update_cancel_status_roadmap_request(self, roadmap_request_id) -> RoadmapRequest:
+        pass
+
+    @abstractmethod
     def update_declined_status_roadmap_request(self, sender_id, roadmap_request_id) -> RoadmapRequest:
         pass
 

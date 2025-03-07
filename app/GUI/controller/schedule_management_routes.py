@@ -33,6 +33,20 @@ def get_all_schedule_managements_of_user(user_id):
     schedule_managements = schedule_management_service.get_all_schedule_management_by_user_id(user_id=user_id)
     return schedule_management_schema.jsonify(obj=schedule_managements, many=True), 200
 
+@schedule_management_bp.route('/api/v1/schedule-managements/<schedule_management_title>/users/<user_id>', methods=['GET'])
+@middleware_auth
+def get_schedule_management_of_user_by_title(schedule_management_title, user_id):
+    try:
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decode_token = auth.verify_id_token(id_token=id_token)
+        user_id_token = decode_token['user_id']
+        if user_id_token != user_id:
+            raise Exception('Không có quyền truy cập vào tài nguyên')
+        schedule_managements = schedule_management_service.get_schedule_management_by_title_and_user_id(schedule_management_title=schedule_management_title, user_id=user_id)
+        return schedule_management_schema.jsonify(obj=schedule_managements, many=True), 200
+    except Exception as e:
+        return jsonify(message=str(e)), 401
+
 @schedule_management_bp.route('/api/v1/schedule-managements/<int:schedule_management_id>', methods=['GET'])
 @middleware_auth
 def get_schedule_management_of_user(schedule_management_id):
@@ -44,9 +58,14 @@ def get_schedule_management_of_user(schedule_management_id):
     return schedule_management_schema.jsonify(obj=schedule_management), 200
 
 @schedule_management_bp.route('/api/v1/schedule-managements/users/<user_id>', methods=['POST'])
+@middleware_auth
 def create_schedule_management_for_user(user_id):
     json_data = request.get_json()
+    id_token = request.headers.get('Authorization').split(' ')[1]
+    decode_token = auth.verify_id_token(id_token=id_token)
     try:
+        if (user_id != decode_token['user_id']):
+            raise Exception('Không được phép thao tác tài nguyên của user khác')
         scheduleManagementMapper = schedule_management_schema.load(data=json_data)
         scheduleManagementMapper.user_id = user_id
         scheduleManagementCreate = schedule_management_service.create_schedule_management(schedule_management=scheduleManagementMapper)
@@ -54,14 +73,14 @@ def create_schedule_management_for_user(user_id):
         dataObjectPayload = simplejson.dumps({'payload': scheduleManagementCreateJson})
         # print(dataObjectPayload)
         redis_client.publish('schedule_managements.update', message=dataObjectPayload)
-        return jsonify(message='Tao thanh cong'), 201
+        return schedule_management_schema.jsonify(obj=scheduleManagementCreate), 201
     except ValidationError as ve:
         print(ve.messages)
         return jsonify({"errors": ve.messages['content']}), 422
     except SQLAlchemyError as sae:
         return jsonify({"errors": str(sae)}), 500
     except Exception as ex:
-        return jsonify({"errors": str(ex)}), 500
+        return jsonify({"errors": str(ex)}), 401
 
 @schedule_management_bp.route('/api/v1/schedule-managements/is-open', methods=['GET'])
 def get_all_schedule_managements_opening():
@@ -161,11 +180,16 @@ def accept_roadmap_request(roadmap_share_id, roadmap_request_id):
         id_token = request.headers.get('Authorization').split(' ')[1]
         decode_token = auth.verify_id_token(id_token=id_token)
         main_user_id = decode_token['user_id']
-        roadmap_requests_of_roadmap_share, notification_pairing = schedule_management_share_route\
+        roadmap_requests_of_roadmap_share, notification_pairing, roadmap_share = schedule_management_share_route\
                                                                     .handle_accept_roadmap_request(roadmap_request_id, main_user_id)
         notification_pairing_json = notification_schema.dump(obj=notification_pairing)
-        noti_payloads = simplejson.dumps(obj={'payload': notification_pairing_json, 'include_self': False, 'send_to': notification_pairing.main_user_id, 'skip_sid': main_user_id})
+        roadmap_share_json = roadmap_share_schema.dump(obj=roadmap_share)
+    
+        noti_payloads = simplejson.dumps(obj={'payload': notification_pairing_json, 'send_to': notification_pairing.main_user_id, 'skip_sid': main_user_id})
+        roadmap_share_payloads = simplejson.dumps(obj={'payload': roadmap_share_json, 'skip_sid': main_user_id})
+        
         redis_client.publish('notification.update', noti_payloads)
+        redis_client.publish('roadmap_share.update', roadmap_share_payloads)
         return roadmap_request_schema.jsonify(obj=roadmap_requests_of_roadmap_share, many=True), 200
     except Exception as e:
         print(e)
@@ -198,4 +222,23 @@ def get_roadmaps_request_of_user(user_id):
     except Exception as e:
         print(e)
         return jsonify(message=str(e)), 400
+
+@schedule_management_bp.route('/api/v1/users/<user_id>/roadmaps-request/<int:roadmap_request_id>', methods=['POST'])
+@middleware_auth
+def cancel_request(user_id, roadmap_request_id):
+    try:
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decode_token = auth.verify_id_token(id_token=id_token)
+        user_id_token = decode_token['user_id']
+        if (user_id_token != user_id):
+            raise Exception('Không có quyền truy cập tài nguyên không phải của bạn')
+        roadmap_request = roadmap_request_service.update_cancel_status_roadmap_request(roadmap_request_id=roadmap_request_id)
+        roadmap_request_json = roadmap_request_schema.dump(obj=roadmap_request)
+        roadmap_request_json_str = simplejson.dumps(obj={'payload': roadmap_request_json, 'send_to': roadmap_request.roadmap_share.schedule_share.schedule_management.user_id, 'skip_sid': None})
+        redis_client.publish('roadmap_request.update', roadmap_request_json_str)
+        
+        return roadmap_request_schema.jsonify(obj=roadmap_request), 200
+    except Exception as e:
+        return jsonify(message=str(e)), 401
+
         

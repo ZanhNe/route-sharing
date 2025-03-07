@@ -14,6 +14,10 @@ class IScheduleShareService(ABC):
 
 
     @abstractmethod
+    def check_outdate_schedule(self):
+        pass
+
+    @abstractmethod
     def get_schedule_share_by_id(self, schedule_share_id):
         pass
 

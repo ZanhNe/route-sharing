@@ -1,7 +1,7 @@
 from app.DAL.Interfaces.IConversationRepository import IConversationRepository
 from typing import List
 from app.GUI.model.models import Conversation, Message, Participant, User
-from sqlalchemy.orm import Session, joinedload, subqueryload, contains_eager
+from sqlalchemy.orm import Session, joinedload, subqueryload, contains_eager, outerjoin
 from sqlalchemy import or_, asc, desc
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,7 +20,7 @@ class ConversationRepository(IConversationRepository):
         result.messages.reverse()
         return result
 
-    def get_conversation_by_two_user_id(self, session: Session, first_user_id: int, second_user_id: int) -> Conversation:
+    def get_conversation_by_two_user_id(self, session: Session, first_user_id: str, second_user_id: str) -> Conversation:
         participants_exist = (
             session.query(Participant)
             .filter(Participant.user_id.in_([first_user_id, second_user_id]))
@@ -38,10 +38,9 @@ class ConversationRepository(IConversationRepository):
             session.add(instance=conversation)
             return conversation
         
-    def get_conversations_by_user_id(self, session: Session, user_id: int, limit: int = 10):
+    def get_conversations_by_user_id(self, session: Session, user_id: str, limit: int = 10):
         subquery = session.query(Participant.conversation_id).filter(Participant.user_id == user_id).subquery()
-        
-        
+
         row_number = func.row_number().over( #đánh số thứ tự rank của từng message ứng với conversation_id
             partition_by=Message.conversation_id,
             order_by=Message.message_id.desc()
@@ -49,20 +48,32 @@ class ConversationRepository(IConversationRepository):
 
         message_sub = session.query(Message, row_number).filter(Message.conversation_id.in_(subquery)).order_by(Message.conversation_id.asc()).cte()
 
+
         conversations = []
         conversation_dict = defaultdict(lambda: {"conversation": None, "messages": []})
-        results = session.query(Conversation, Message).options(contains_eager(Conversation.messages)).join(message_sub, Conversation.conversation_id == message_sub.c.conversation_id).join(Message, message_sub.c.message_id == Message.message_id).filter(message_sub.c.rn <= limit).order_by(message_sub.c.message_id.desc(), Conversation.lastest_updated.desc()).all() 
+        results = session.query(Conversation, Message)\
+            .options(contains_eager(Conversation.messages))\
+            .outerjoin(message_sub, Conversation.conversation_id == message_sub.c.conversation_id)\
+            .outerjoin(Message, message_sub.c.message_id == Message.message_id)\
+            .filter(or_(message_sub.c.rn <= limit, message_sub.c.rn == None))\
+            .order_by(message_sub.c.message_id.desc(), Conversation.lastest_updated.desc()).all() 
+
+
         for conv, mess in results:
-            if (conversation_dict[conv.conversation_id]['conversation'] is None):
+        # Khởi tạo conversation nếu chưa có
+            if conversation_dict[conv.conversation_id]['conversation'] is None:
                 conv.messages = []
                 conversation_dict[conv.conversation_id]['conversation'] = conv
-            conversation_dict[conv.conversation_id]['messages'].append(mess)
+        # Chỉ thêm mess nếu không phải None
+            if mess is not None:
+                conversation_dict[conv.conversation_id]['messages'].append(mess)
 
         for key in conversation_dict.keys():
             conv = conversation_dict[key]['conversation']
             conversation_dict[key]['messages'].reverse()
             conv.messages = conversation_dict[key]['messages']
             conversations.append(conv)
+
         return conversations
 
      

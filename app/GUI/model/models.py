@@ -1,17 +1,13 @@
-# from app.extentions.extentions import db
+
+from app.extentions.extentions import db
 from typing import Optional, List
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, Table, Numeric, Enum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Numeric, Enum
 from datetime import datetime
-from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column, declared_attr
+from sqlalchemy.orm import relationship, Mapped, mapped_column, declared_attr
 from sqlalchemy.dialects.mysql import LONGTEXT
+from datetime import datetime
 import enum
-from datetime import datetime, timezone
 
-class Base(DeclarativeBase):
-    pass
-
-db = SQLAlchemy(model_class=Base)
 
 
 route_location = Table('route_location', 
@@ -39,19 +35,19 @@ user_route = Table('user_route', db.metadata,
 
 
 class Status(enum.Enum):
-    FREE = 'free'
-    MATCHING = 'matching'
     PENDING = 'pending'
-    WAITING = 'waiting'
     ACCEPTED = 'accepted'
     DECLINED = 'declined'
     CANCELLED = 'cancelled'
+    FREE = 'free'
 
 
 class StatusMatch(enum.Enum):
     WAITING = 'waiting'
-    EXECUTING = 'executing'
-    COMPLETE = 'complete'
+    COMPLETED = 'completed'
+    NOT_STARTED = 'not_started'
+    IN_PROGRESS = 'in_progress'
+    CANCELLED = 'cancelled'
 
 class StatusActive(enum.Enum):
     CLOSE = 'close'
@@ -98,8 +94,8 @@ class BaseConversation(db.Model):
 class Conversation(BaseConversation, db.Model):
     __tablename__ = 'conversation'
 
-    messages: Mapped[List['Message']] = relationship(lazy='select')
-    participants: Mapped[List['Participant']] = relationship(lazy='select')
+    messages: Mapped[List['Message']] = relationship(lazy=True)
+    participants: Mapped[List['Participant']] = relationship(back_populates='conversation', lazy=True)
 
 class ConversationGroup(BaseConversation, db.Model):
     __tablename__ = 'conversation_group'
@@ -143,44 +139,8 @@ class MessageGroup(BaseMessage, db.Model):
     group_id: Mapped[int] = mapped_column('group_id', ForeignKey('conversation_group.conversation_id'))
 
 
-# class MatchRoute(db.Model):
-#     __tablename__ = 'matchroute'
-#     match_id: Mapped[int] = mapped_column('match_id', primary_key=True, autoincrement=True)
-
-#     matched_time: Mapped[DateTime] = mapped_column('matched_time', DateTime, nullable=False)
-#     # is_match: Mapped[bool] = mapped_column('is_match', default=True)
-#     # is_complete: Mapped[bool] = mapped_column('is_complete', default=False, nullable=False)
-
-#     status: Mapped[str] = mapped_column('status', Enum(StatusMatch), default=StatusMatch.WAITING, nullable=False)
-
-#     start_time_actual: Mapped[DateTime] = mapped_column('start_time_actual', DateTime, nullable=True)
-#     end_time_actual: Mapped[DateTime] = mapped_column('end_time_actual', DateTime, nullable=True)
-
-#     main_user_id: Mapped[str] = mapped_column('main_user_id', ForeignKey('user.user_id'))
-#     secondary_user_id: Mapped[str] = mapped_column('secondary_user_id', ForeignKey('user.user_id'))
-#     route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
-#     route_share_id: Mapped[int] = mapped_column('route_share_id', ForeignKey('routeshare.share_id'))
-
-#     main_user: Mapped['User'] = relationship(back_populates='match_associations', foreign_keys=[main_user_id], lazy=True)
-#     secondary_user: Mapped['User'] = relationship(foreign_keys=[secondary_user_id])
-#     route: Mapped['Route'] = relationship(back_populates='matchs', lazy=True)
-#     route_share: Mapped['UserRouteShare'] = relationship(lazy=True)
 
 
-# class RequestRoute(db.Model):
-#     __tablename__ = 'request'
-#     request_id: Mapped[int] = mapped_column('request_id', primary_key=True, autoincrement=True)
-#     status: Mapped[str] = mapped_column('status', Enum(Status), default=Status.PENDING)
-
-#     created_time: Mapped[DateTime] = mapped_column('created_time', DateTime, default=datetime.now)
-
-#     main_user_id: Mapped[str] = mapped_column('main_user_id', ForeignKey('user.user_id'))
-#     secondary_user_id: Mapped[str] = mapped_column('secondary_user_id', ForeignKey('user.user_id'))
-#     route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
-
-#     main_user: Mapped['User'] = relationship(back_populates='request_associations', foreign_keys=[main_user_id], lazy=True)
-#     secondary_user: Mapped['User'] = relationship(foreign_keys=[secondary_user_id])
-#     route: Mapped['Route'] = relationship(back_populates='requests', lazy=True)
 
 
 class Notification(db.Model):
@@ -230,36 +190,14 @@ class Route(db.Model):
     __tablename__ = 'route'
     route_id: Mapped[int] = mapped_column('route_id', primary_key=True, autoincrement=True)
     route_name: Mapped[str] = mapped_column('route_name', String(500), nullable=False)
-    # buses: Mapped[List["Bus"]] = relationship(back_populates='route', lazy=True)
     places: Mapped[List['Place']] = relationship(secondary=RouteDetail, back_populates='routes', lazy=True, order_by='routedetail.c.order')
-    # users_share: Mapped[List['UserRouteShare']] = relationship(back_populates='route', lazy=True)
-    # matchs: Mapped[List['MatchRoute']] = relationship(back_populates='route', lazy=True)
 
-    # requests: Mapped[List['RequestRoute']] = relationship(back_populates='route', lazy=True)
-
-# class UserRouteShare(db.Model):
-#     __tablename__ = 'routeshare'
-#     share_id: Mapped[int] = mapped_column('share_id', primary_key=True, autoincrement=True)
-#     is_match: Mapped[bool] = mapped_column('is_match', default=False, nullable=False)
-#     share_name: Mapped[str] = mapped_column('share_name', String(255), nullable=False)
-#     share_description: Mapped[str] = mapped_column('share_description', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-#     share_date: Mapped[DateTime] = mapped_column('share_date', DateTime, default=datetime.now, nullable=False)
-
-#     start_time: Mapped[DateTime] = mapped_column('start_time', DateTime, nullable=False)
-#     end_time: Mapped[DateTime] = mapped_column('end_time', DateTime, nullable=False)
-
-#     user_id: Mapped[str] = mapped_column('user_id', ForeignKey('user.user_id'))
-#     route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
-
-#     user: Mapped['User'] = relationship(back_populates='routes_share', lazy=True)
-#     route: Mapped['Route'] = relationship(back_populates='users_share', lazy=True)
 
 class ScheduleManagement(db.Model):
     __tablename__ = 'schedule_management'
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column('title', String(500), nullable=False)
     content: Mapped[str] = mapped_column('content', LONGTEXT(charset='utf8mb4', collation='utf8mb4_unicode_ci'), nullable=False)
-    # status: Mapped[str] = mapped_column('status', Enum(StatusActive), default=StatusActive.OPEN, nullable=False)
     is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
     created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'), nullable=True)
@@ -291,10 +229,6 @@ class ScheduleShare(db.Model):
     def checkValidRoadmapFromAnotherTime(self, time) -> bool:
         if (not len(self.list_roadmaps)):
             return True
-        
-        # print(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time)
-        # print(type(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time))
-        # dt1 = datetime.fromisoformat(str(self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time))
         dt1 = self.list_roadmaps[len(self.list_roadmaps) - 1].estimated_arrival_time
         dt2 = datetime.fromisoformat(time)
         return dt2 >= dt1
@@ -338,6 +272,9 @@ class RoadmapRequest(db.Model):
     route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
 
     roadmap_share: Mapped['RoadmapShare'] = relationship(back_populates='roadmap_requests', lazy=True)
+
+    roadmap_pairing: Mapped[Optional['RoadmapPairing']] = relationship(back_populates='roadmap_request', cascade='delete', lazy=True)
+
     sender: Mapped['User'] = relationship(back_populates='roadmap_requests', lazy=True) 
     route: Mapped['Route'] = relationship(lazy=True)
 
@@ -352,22 +289,8 @@ class SchedulePairingManagement(db.Model):
     list_schedule_pairings: Mapped[List['SchedulePairing']] = relationship(back_populates='schedule_pairing_management', lazy=True)    
 
 schedulepairing_roadmappairing = Table('schedulepairing_roadmappairing', db.metadata, 
-                    Column('schedule_pairing_id', ForeignKey('schedule_pairing.id'), primary_key=True), 
-                    Column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id'), primary_key=True))
-
-
-# class UserRoadmapPairing(db.Model):
-#     __tablename__ = 'user_roadmap_pairing'
-#     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
-#     user_id: Mapped[int] = mapped_column('user_id', ForeignKey('user.user_id'))
-#     roadmap_pairing_id: Mapped[int] = mapped_column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id'))
-#     is_host: Mapped[bool] = mapped_column('is_host', nullable=False)
-#     joined_date: Mapped[DateTime] = mapped_column('joined_date', DateTime, default=datetime.now, nullable=False)
-
-#     user: Mapped['User'] = relationship(back_populates='list_roadmap_pairings', lazy=True)
-#     roadmap_pairing: Mapped['RoadmapPairing'] = relationship(back_populates='list_user_pairings', lazy=True)
-
-
+                    Column('schedule_pairing_id', ForeignKey('schedule_pairing.id', ondelete='CASCADE'), primary_key=True), 
+                    Column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id', ondelete='CASCADE'), primary_key=True))
 
 
 
@@ -381,32 +304,42 @@ class SchedulePairing(db.Model):
     schedule_pairing_management_id: Mapped[int] = mapped_column('schedule_pairing_management_id', ForeignKey('schedule_pairing_management.id'))
     
     schedule_pairing_management: Mapped['SchedulePairingManagement'] = relationship(back_populates='list_schedule_pairings', lazy=True)
-    list_roadmap_pairings: Mapped[List['RoadmapPairing']] = relationship(secondary=schedulepairing_roadmappairing, back_populates='list_schedule_pairings', lazy=True)
+    list_roadmap_pairings: Mapped[List['RoadmapPairing']] = relationship(secondary=schedulepairing_roadmappairing, back_populates='list_schedule_pairings', lazy='dynamic')
 
 class RoadmapPairing(db.Model):
     __tablename__ = 'roadmap_pairing'
     id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
-    status: Mapped[str] = mapped_column('status', Enum(StatusMatch), default=StatusMatch.WAITING, nullable=False)
+    status: Mapped[str] = mapped_column('status', Enum(StatusMatch), default=StatusMatch.NOT_STARTED, nullable=False)
     # is_open: Mapped[bool] = mapped_column('is_open', default=True, nullable=False)
     created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
     actual_departure_time: Mapped[Optional[DateTime]] = mapped_column('actual_departure_time', DateTime, nullable=True) #Giờ khởi hành dự kiến
     actual_arrival_time: Mapped[Optional[DateTime]] = mapped_column('actual_arrival_time', DateTime, nullable=True) #Giờ đến nơi dự kiến  
 
-    # admin_id: Mapped[str] = mapped_column('admin_id', ForeignKey('user.user_id'))
-    # admin: Mapped['User'] = relationship(lazy=)
-
-    # roadmap_share_id: Mapped[int] = mapped_column('roadmap_share_id', ForeignKey('roadmap_share.id'))
-    # roadmap_share: Mapped['RoadmapShare'] = relationship(lazy=True)
-
-    # route_id: Mapped[int] = mapped_column('route_id', ForeignKey('route.route_id'))
-    # route: Mapped['Route'] = relationship(lazy=True)
-
     roadmap_request_id: Mapped[int] = mapped_column('roadmap_request_id', ForeignKey('roadmap_request.id'))
-    roadmap_request: Mapped['RoadmapRequest'] = relationship(lazy=True)
+    
+    roadmap_request: Mapped['RoadmapRequest'] = relationship(back_populates='roadmap_pairing', cascade='delete', lazy=True)
+    list_roadmap_pairing_request: Mapped[List['RoadmapPairingRequest']] = relationship(back_populates='roadmap_pairing', cascade='all, delete', lazy=True)
+    list_schedule_pairings: Mapped[List['SchedulePairing']] = relationship(secondary=schedulepairing_roadmappairing, back_populates='list_roadmap_pairings', lazy='dynamic')
 
-    list_schedule_pairings: Mapped[List['SchedulePairing']] = relationship(secondary=schedulepairing_roadmappairing, back_populates='list_roadmap_pairings', lazy=True)
-    # list_user_pairings: Mapped[List['UserRoadmapPairing']] = relationship(back_populates='roadmap_pairing', lazy=True)
+    def check_roadmap_pairing_request(self) -> bool:
+        if (not len(self.list_roadmap_pairing_request)):
+            return True
+        if (self.list_roadmap_pairing_request[-1].status == Status.PENDING):
+            return False
+        return True
 
+
+class RoadmapPairingRequest(db.Model):
+    __tablename__ = 'roadmap_pairing_request'
+    id: Mapped[int] = mapped_column('id', primary_key=True, autoincrement=True)
+    status: Mapped[str] = mapped_column('status', Enum(Status), default=Status.PENDING, nullable=False)
+    created_date: Mapped[DateTime] = mapped_column('created_date', DateTime, default=datetime.now, nullable=False)
+
+    roadmap_pairing_id: Mapped[int] = mapped_column('roadmap_pairing_id', ForeignKey('roadmap_pairing.id'))
+    sender_id: Mapped[int] = mapped_column('sender_id', ForeignKey('user.user_id'))
+
+    roadmap_pairing: Mapped['RoadmapPairing'] = relationship(back_populates='list_roadmap_pairing_request', lazy=True)
+    sender: Mapped['User'] = relationship(back_populates='roadmap_pairing_requests', lazy=True)
 
     
 
@@ -416,25 +349,25 @@ class User(db.Model):
     user_id: Mapped[str] = mapped_column('user_id', String(200), primary_key=True)
     user_name: Mapped[str] = mapped_column('username', String(30), nullable=True)
     user_account: Mapped[str] = mapped_column('user_account', String(30), nullable=False, unique=True)
-    # password: Mapped[str] = mapped_column('password', String(1000), nullable=False)
     avatar: Mapped[str] = mapped_column('avatar', String(300), nullable=True)
     background: Mapped[str] = mapped_column('background', String(300), nullable=True)
     phone: Mapped[str] = mapped_column('phone', String(11), unique=True, nullable=True)
+    is_verified: Mapped[bool] = mapped_column('is_verified', default=False, nullable=True) #TODO ---------
     status : Mapped[str] = mapped_column('status', Enum(Status), default=Status.FREE)
     created_time: Mapped[DateTime] = mapped_column('created_time', DateTime, default=datetime.now, nullable=True)
     updated_time: Mapped[Optional[DateTime]] = mapped_column('updated_time', DateTime, nullable=True)
 
 
-    roles: Mapped[List['Roles']] = relationship(secondary='user_role', back_populates='users')
+    roles: Mapped[List['Roles']] = relationship(secondary='user_role', back_populates='users', cascade='delete')
 
 
-    participates: Mapped[List['Participant']] = relationship(back_populates='user', lazy=True)
-    participate_groups: Mapped[List['ParticipantGroup']] = relationship(back_populates='user', lazy=True)
+    participates: Mapped[List['Participant']] = relationship(back_populates='user', lazy=True, cascade='delete')
+    participate_groups: Mapped[List['ParticipantGroup']] = relationship(back_populates='user', lazy=True, cascade='delete')
 
-    notification_associations: Mapped[List['Notification']] = relationship(foreign_keys=[Notification.main_user_id], back_populates='main_user', lazy=True)
-    list_schedule_managements: Mapped[List['ScheduleManagement']] = relationship(back_populates='user', lazy=True)
-    roadmap_requests: Mapped[List['RoadmapRequest']] = relationship(back_populates='sender', lazy=True)
-    # list_roadmap_pairings: Mapped[List['UserRoadmapPairing']] = relationship(back_populates='user', lazy=True)
+    notification_associations: Mapped[List['Notification']] = relationship(foreign_keys=[Notification.main_user_id], back_populates='main_user', cascade='delete', lazy=True)
+    list_schedule_managements: Mapped[List['ScheduleManagement']] = relationship(back_populates='user', lazy=True, cascade='delete')
+    roadmap_requests: Mapped[List['RoadmapRequest']] = relationship(back_populates='sender', lazy=True, cascade='delete')
+    roadmap_pairing_requests: Mapped[List['RoadmapPairingRequest']] = relationship(back_populates='sender', lazy=True, cascade='delete')
 
 
 

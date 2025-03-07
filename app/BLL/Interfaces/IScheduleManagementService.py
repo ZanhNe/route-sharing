@@ -13,6 +13,10 @@ class IScheduleManagementService(ABC):
         pass
 
     @abstractmethod
+    def get_schedule_management_by_title_and_user_id(self, schedule_management_title: str, user_id: str) -> List[ScheduleManagement]:
+        pass
+
+    @abstractmethod
     def get_schedule_management_by_schedule_management_id(self, schedule_management_id: int) -> ScheduleManagement:
         pass
 

@@ -11,8 +11,13 @@ class SocketHandler(ISocketHandler):
             'user.update': self.user_socket_handler,
             'schedule_managements.update': self.schedule_managements_handler,
             'roadmap_request.update': self.roadmap_request_handler,
+            'roadmap_share.update': self.roadmap_share_handler,
+            'roadmap_pairing.update': self.roadmap_pairing_handler,
+            'roadmap_pairing_request.update': self.roadmap_pairing_request_handler,
             'join_private_conversation': None
         }
+
+
     
     def routes_share_socket_handler(self, data, to: str = None, skip_sid: str = None):
         if (not to):
@@ -49,4 +54,21 @@ class SocketHandler(ISocketHandler):
             self.socketio.emit('roadmap_request.update', data, skip_sid=skip_sid)
         else:
             self.socketio.emit('roadmap_request.update', data, to=to, skip_sid=skip_sid)
-        
+    
+    def roadmap_share_handler(self, data, to: str = None, skip_sid: str = None):
+        if (not to):
+            self.socketio.emit('roadmap_share.update', data, skip_sid=skip_sid)
+        else:
+            self.socketio.emit('roadmap_share.update', data, to=to, skip_sid=skip_sid, )
+
+    def roadmap_pairing_handler(self, data, to: str = None, skip_sid: str = None):
+        if (not to):
+            self.socketio.emit('roadmap_pairing.update', data, skip_sid=skip_sid)
+        else:
+            self.socketio.emit('roadmap_pairing.update', data, to=to, skip_sid=skip_sid)
+
+    def roadmap_pairing_request_handler(self, data, to: str = None, skip_sid: str = None):
+        if (not to):
+            self.socketio.emit('roadmap_pairing_request.update', data, skip_sid=skip_sid)
+        else:
+            self.socketio.emit('roadmap_pairing_request.update', data, to=to, skip_sid=skip_sid)

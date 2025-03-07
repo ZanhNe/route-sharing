@@ -25,6 +25,10 @@ class ScheduleShareRepository(IScheduleShareRepository):
         query.update(data)
         return query.all()
 
+    def update_schedules_share_lt(self, session: Session, conditions: dict, data):
+        query = session.query(ScheduleShare).filter(*[getattr(ScheduleShare, key) < value for key, value in conditions.items()])
+        query.update(data)
+        return query.all()
         
 
     def update_schedule_share(self, session: Session, conditions, data):

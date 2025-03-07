@@ -22,6 +22,21 @@ class RoadmapShareRepository(IRoadmapShareRepository):
     def create_roadmap_share(self, session: Session,roadmap_share):
         pass
 
+    def update_roadmap_share(self, session: Session, roadmap_share_id: int, data_update: dict) -> RoadmapShare:
+        session.query(RoadmapShare).filter(RoadmapShare.id == roadmap_share_id).update(values=data_update)
+        return session.query(RoadmapShare).get(ident=roadmap_share_id)
+    
+    def update_roadmaps_share_by_schedule_share_id(self, session: Session, data_update: dict):
+        sql = text(
+            """
+            UPDATE ROADMAP_SHARE SET IS_OPEN = :IS_OPEN WHERE SCHEDULE_SHARE_ID IN(
+                SELECT SCHEDULE_SHARE_ID FROM SCHEDULE_SHARE WHERE IS_OPEN = TRUE AND DEPARTURE_DATE < :TIME_NOW
+            );
+        """
+        )
+        session.execute(sql, {'IS_OPEN': data_update['is_open'], 'TIME_NOW': data_update['time']})
+
+
     # def update_datetime_roadmap_share_by_schedule_share_id(self, session: Session,schedule_share_id: int, date_update: str) -> bool:
     #     try:
     #         query = text(

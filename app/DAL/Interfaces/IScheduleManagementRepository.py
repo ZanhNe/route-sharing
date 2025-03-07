@@ -10,6 +10,10 @@ class IScheduleManagementRepository(ABC):
         pass
 
     @abstractmethod
+    def get_schedule_management_by_title_and_user_id(self, session: Session, schedule_management_title: str, user_id: str) -> List[ScheduleManagement]:
+        pass
+
+    @abstractmethod
     def get_all_schedule_management(self, session: Session) -> List[ScheduleManagement]:
         pass
 
